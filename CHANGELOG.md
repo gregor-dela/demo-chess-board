@@ -4,8 +4,13 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Vzdrževanje
-- Posodobljen CHANGELOG za zadnje spremembe
+### Dodano
+- Način igre "Človek vs AI" z gumbom za preklop in indikatorjem "AI razmišlja..."
+- AI pogon z knjigo otvoritev, ocenjevanjem pozicije, iskanjem (alfa-beta in quiescence) ter transpozicijsko tabelo
+- Preklop orientacije šahovnice (whiteBottom/blackBottom)
+- Zaznava remija: trikratna ponovitev in pravilo 50 potez (halfMoveClock/positionCounts)
+- Označevanje zadnje poteze na plošči
+- Testi za AI integracijo, orientacijo plošče in pravila remija
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a
@@ -204,4 +209,3 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - Zaznava šaha in filtriranje zakonitih potez.
   - `utils/moveValidation.ts`: dodani `findKingPosition`, `isKingInCheck` in `isMoveLegal`; `getValidMoves` zdaj filtrira poteze, ki pustijo lastnega kralja v šahu.
   - `hooks/useChessGame.ts`: po `MAKE_MOVE` nastavi `isInCheck`, če je nasprotnikov kralj v šahu; po `UNDO_MOVE` ponovno izračuna `isInCheck` za naslednjega trenutnega igralca.
-

@@ -17,17 +17,20 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
   - King single-square moves
   - Castling moves (king-side and queen-side)
 - **Endgame Detection**:
-  - Automatic detection of checkmate and stalemate
+  - Automatic detection of checkmate, stalemate, and draw (threefold repetition, 50-move rule)
   - "Check!" warning while the game is active
 - **Move Notation**: Move history uses Standard Algebraic Notation (SAN) with disambiguation, captures, castling, and check/checkmate indicators
 - **Visual Feedback**: 
   - Highlighted selected pieces
   - Valid move indicators
+  - Last move highlights
   - Chess board with alternating square colors
 - **Game Controls**:
   - Prominent Reset button with confirmation dialog
   - Undo move support (even after game end)
   - Redo move support to restore previously undone moves
+  - Mode toggle (Human vs Human or Human vs AI) with AI thinking indicator
+  - Board orientation toggle (flip board)
 - **Game State Management**: Turn-based gameplay with proper state tracking
 - **Responsive Design**: Clean, modern UI that works on different screen sizes
 
@@ -37,7 +40,6 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
 - **TypeScript** - Type-safe development
 - **Vite** - Fast build tool and development server
 - **Tailwind CSS** - Utility-first CSS framework
-- **Lucide React** - Beautiful icons
 
 ## Getting Started
 
@@ -101,13 +103,16 @@ src/
 │   ├── ConfirmationDialog.tsx # Reusable confirmation modal (used for Reset)
 │   ├── ErrorBoundary.tsx    # UI error boundary wrapper
 │   └── PromotionDialog.tsx  # Accessible pawn promotion selection dialog
+├── engine/                  # AI engine (opening book, search, evaluation)
 ├── hooks/                   # Custom React hooks
 │   └── useChessGame.ts      # Main game logic hook and reducer
+├── test/                    # Test setup and utilities
 ├── utils/                   # Utility functions
 │   ├── chessUtils.ts        # Chess helper functions (notation, castling rights, etc.)
 │   └── moveValidation.ts    # Move validation logic (legal moves, check, mate, stalemate)
 ├── types/                   # TypeScript type definitions
-│   └── chess.ts             # Chess-related types
+│   ├── chess.ts             # Chess-related types
+│   └── ui.ts                # UI-related types
 ├── App.tsx                  # Main application component
 ├── components/ChessGame.tsx # Container composing board, controls, and dialogs
 └── main.tsx                 # Application entry point
@@ -127,7 +132,7 @@ src/
    - **Queen-side Castling**: Move the king two squares toward the rook on the queen's side
    - **Requirements**: King and rook must not have moved, no pieces between them, king not in check, and king doesn't move through or into check
 5. **Turn System**: Players alternate turns (white moves first)
-6. **Game Controls**: Use the "Reset Game" button to restart (you'll be asked to confirm); use "Undo Move" to revert the last move; use "Redo Move" to restore a previously undone move.
+6. **Game Controls**: Use the "Reset Game" button to restart (you'll be asked to confirm); use "Undo Move" to revert the last move; use "Redo Move" to restore a previously undone move; use the mode toggle to switch between Human vs Human and Human vs AI; use the board orientation toggle to flip the board.
 7. **Promotion**: When a pawn reaches the back rank (8 for white, 1 for black), a promotion dialog opens. Choose Queen, Rook, Bishop, or Knight; press Enter/Space to confirm or Escape to cancel.
 
 ## Game Rules Implemented
@@ -135,18 +140,18 @@ src/
 - Standard chess piece movements
 - Turn-based gameplay
 - Move validation that prevents leaving your king in check
-- Check alert while active and automatic endgame detection (checkmate, stalemate)
+- Check alert while active and automatic endgame detection (checkmate, stalemate, draw)
+- Draw detection via threefold repetition and 50-move rule
 - Piece capture mechanics
 - Castling moves (king-side and queen-side)
 - En passant capture (with SAN "e.p." notation)
 - Pawn promotion with accessible dialog and SAN notation (e.g., e8=Q)
-- Visual feedback for valid moves
+- Visual feedback for valid moves and last move
 
 ## Future Enhancements
 
 Potential features that could be added:
 - Enhanced game notation and export
-- AI opponent
 - Online multiplayer
 
 ## Accessibility

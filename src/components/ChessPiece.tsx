@@ -32,10 +32,13 @@ const ChessPiece: React.FC<ChessPieceProps> = ({
   const pieceSymbol = getPieceSymbol(piece.type, piece.color)
   const dragClasses = 'cursor-grab active:cursor-grabbing'
   const selectedClasses = isSelected ? 'scale-110' : ''
+  const colorClasses =
+    piece.color === 'white' ? 'chess-piece--white' : 'chess-piece--black'
+  const typeClasses = `chess-piece--${piece.type}`
 
   return (
     <div
-      className={`chess-piece ${dragClasses} ${selectedClasses}`}
+      className={`chess-piece ${colorClasses} ${typeClasses} ${dragClasses} ${selectedClasses}`}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

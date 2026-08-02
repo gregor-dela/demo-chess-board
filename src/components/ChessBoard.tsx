@@ -1,6 +1,7 @@
 import React from 'react'
 import ChessSquare from './ChessSquare'
 import ErrorBoundary from './ErrorBoundary'
+import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
 import { ChessBoardProps } from '../types/chess'
 import { getSquareColor, getCoordinatesFromSquare } from '../utils/chessUtils'
 
@@ -15,6 +16,10 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <div className="board-stage">
+      <CapturedPiecesTop
+        moveHistory={gameState.moveHistory}
+        orientation={gameState.orientation}
+      />
       <div className="board-stage__frame">
         <div className="board-stage__ranks" aria-hidden="true">
           {ranks.map(rank => (
@@ -70,6 +75,10 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
           </ErrorBoundary>
         </div>
       </div>
+      <CapturedPiecesBottom
+        moveHistory={gameState.moveHistory}
+        orientation={gameState.orientation}
+      />
     </div>
   )
 }

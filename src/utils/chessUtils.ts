@@ -28,9 +28,10 @@ export const getPieceSymbol = (type: PieceType, color: PieceColor): string => {
 }
 
 // Get square color (light or dark)
+// Standard: a1 (white's corner) is dark; queen always starts on its own color
 export const getSquareColor = (file: string, rank: number): 'light' | 'dark' => {
   const fileIndex = file.charCodeAt(0) - 'a'.charCodeAt(0)
-  return (fileIndex + rank) % 2 === 0 ? 'dark' : 'light'
+  return (fileIndex + rank) % 2 === 0 ? 'light' : 'dark'
 }
 
 // Convert square notation to coordinates

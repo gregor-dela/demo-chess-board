@@ -5,12 +5,24 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Dodano
-- Način igre "Človek vs AI" z gumbom za preklop in indikatorjem "AI razmišlja..."
-- AI pogon z knjigo otvoritev, ocenjevanjem pozicije, iskanjem (alfa-beta in quiescence) ter transpozicijsko tabelo
-- Preklop orientacije šahovnice (whiteBottom/blackBottom)
-- Zaznava remija: trikratna ponovitev in pravilo 50 potez (halfMoveClock/positionCounts)
-- Označevanje zadnje poteze na plošči
-- Testi za AI integracijo, orientacijo plošče in pravila remija
+- restyle board stage and square states
+- redesign game control panel
+- add editorial dark app shell
+
+### Popravljeno
+- stabilize baseline tests before ui work
+
+### Dokumentacija
+- add editorial dark ui implementation plan
+- add frontend redesign spec
+- add comprehensive Code Smell Register to track technical debt and remediation plans
+- refresh README features and structure
+- update changelog for AI and draw features
+- expand agent guidance
+
+### Vzdrževanje
+- ignore local worktrees
+- Osvežen CHANGELOG in marker po zadnjem commitu
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

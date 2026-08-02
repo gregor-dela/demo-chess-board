@@ -4,11 +4,51 @@
 
 @layer base {
   body {
-    @apply font-sans bg-gray-50 text-gray-900;
+    @apply font-sans bg-slate-950 text-slate-100;
   }
 }
 
 @layer components {
+  .app-shell {
+    @apply relative min-h-screen overflow-hidden bg-slate-950;
+  }
+
+  .app-shell__glow {
+    @apply pointer-events-none absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-cyan-500/20 via-indigo-500/10 to-transparent blur-3xl;
+  }
+
+  .app-shell__content {
+    @apply relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6 lg:px-8 lg:py-12;
+  }
+
+  .hero-panel {
+    @apply rounded-[2rem] border border-white/10 bg-slate-900/80 p-6 shadow-2xl shadow-black/30 backdrop-blur md:p-8;
+  }
+
+  .hero-panel__eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300;
+  }
+
+  .hero-panel__title {
+    @apply mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl;
+  }
+
+  .hero-panel__subtitle {
+    @apply mt-4 max-w-3xl text-sm leading-6 text-slate-300 sm:text-base;
+  }
+
+  .game-layout {
+    @apply grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem];
+  }
+
+  .game-layout__board {
+    @apply flex justify-center lg:justify-start;
+  }
+
+  .game-layout__panel {
+    @apply w-full lg:sticky lg:top-8;
+  }
+
   .chess-square {
     @apply w-16 h-16 flex items-center justify-center cursor-pointer transition-all duration-200;
   }

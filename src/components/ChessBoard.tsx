@@ -14,22 +14,20 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
   const ranks = isWhiteBottom ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]
 
   return (
-    <div className="inline-block bg-gray-800 p-4 rounded-lg shadow-2xl">
-      {/* Rank labels (left side) */}
-      <div className="flex">
-        <div className="flex flex-col justify-center mr-2">
+    <div className="board-stage">
+      <div className="board-stage__frame">
+        <div className="board-stage__ranks" aria-hidden="true">
           {ranks.map(rank => (
-            <div key={rank} className="h-16 flex items-center justify-center text-gray-300 font-semibold">
+            <div key={rank} className="board-stage__label">
               {rank}
             </div>
           ))}
         </div>
-        
-        {/* Chess board */}
-        <div>
+
+        <div className="board-stage__main">
           <ErrorBoundary>
             <div
-              className="grid grid-cols-8 border-2 border-gray-700"
+              className="board-grid"
               role="group"
               aria-label="Chess board"
             >
@@ -61,11 +59,10 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                 })
               )}
             </div>
-            
-            {/* File labels (bottom) */}
-            <div className="flex mt-2">
+
+            <div className="board-stage__files" aria-hidden="true">
               {files.map(file => (
-                <div key={file} className="w-16 text-center text-gray-300 font-semibold">
+                <div key={file} className="board-stage__label">
                   {file}
                 </div>
               ))}

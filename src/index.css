@@ -149,31 +149,67 @@
     @apply text-right text-slate-400;
   }
 
+  .board-stage {
+    @apply inline-flex rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur;
+  }
+
+  .board-stage__frame {
+    @apply inline-flex items-stretch gap-3 rounded-[1.5rem] border border-white/10 bg-slate-900/80 p-3;
+  }
+
+  .board-stage__main {
+    @apply flex flex-col items-stretch gap-2;
+  }
+
+  .board-stage__ranks {
+    @apply flex flex-col;
+  }
+
+  .board-stage__files {
+    @apply grid grid-cols-8;
+  }
+
+  .board-stage__label {
+    @apply flex h-16 w-8 items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-slate-400;
+  }
+
+  .board-stage__files .board-stage__label {
+    @apply h-auto w-16 pt-1;
+  }
+
+  .board-grid {
+    @apply grid grid-cols-8 overflow-hidden rounded-[1.25rem] border border-white/10 bg-slate-950 shadow-[0_20px_60px_rgba(15,23,42,0.45)];
+  }
+
   .chess-square {
-    @apply w-16 h-16 flex items-center justify-center cursor-pointer transition-all duration-200;
+    @apply relative flex h-16 w-16 cursor-pointer items-center justify-center transition duration-200 ease-out hover:brightness-110 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
   }
-  
+
   .chess-square-light {
-    @apply bg-chess-light;
+    @apply bg-[#d8c3a5];
   }
-  
+
   .chess-square-dark {
-    @apply bg-chess-dark;
+    @apply bg-[#5d4037];
   }
-  
+
+  .chess-square-last-move {
+    @apply shadow-[inset_0_0_0_2px_rgba(253,224,71,0.8)] brightness-105;
+  }
+
   .chess-square-selected {
-    @apply ring-4 ring-highlight-blue;
+    @apply z-[1] shadow-[inset_0_0_0_4px_rgba(56,189,248,0.95)];
   }
-  
+
   .chess-square-valid-move {
     @apply relative;
   }
-  
+
   .chess-square-valid-move::after {
-    @apply content-[''] absolute inset-0 bg-valid-move opacity-30 rounded-full m-4;
+    @apply pointer-events-none absolute inset-0 m-4 rounded-full bg-cyan-300/35 content-[''];
   }
-  
+
   .chess-piece {
-    @apply text-4xl select-none transition-transform duration-200 hover:scale-110;
+    @apply relative z-[2] text-4xl select-none drop-shadow-[0_6px_12px_rgba(15,23,42,0.45)] transition-transform duration-200 hover:scale-110;
   }
 }

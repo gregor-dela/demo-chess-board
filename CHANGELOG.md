@@ -4,12 +4,9 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dokumentacija
-- update changelog for ui refresh
-
 ### Vzdrževanje
-- Fix board layout collapse after adding captured pieces bars
-- Improve piece visuals + add captured pieces bars
+- min-width + shrink-0 guards prevent collapse
+- refresh changelog for UI refresh (captured pieces, piece visuals, layout fix)
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

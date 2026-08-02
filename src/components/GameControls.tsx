@@ -9,7 +9,6 @@ const GameControls: React.FC<GameControlsProps> = ({
   onRedoMove,
   onToggleOrientation,
   onToggleMode,
-  onSetAiSettings,
 }) => {
   const winnerLabel = gameState.currentPlayer === 'white' ? '⚫ Black' : '⚪ White'
   const [showResetDialog, setShowResetDialog] = useState(false)

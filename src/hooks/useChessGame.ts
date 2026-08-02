@@ -4,8 +4,29 @@ import { createInitialBoard, getPieceAtSquare, isValidSquare, BOARD_SIZE, create
 import { getValidMoves, isEnPassantMove, computeGameStatus } from '../utils/moveValidation'
 import { computeBestMove } from '../engine/ai'
 
+const seedPositionCounts = (state: GameState): GameState => {
+  const key = generatePositionKey(
+    state.board,
+    state.currentPlayer,
+    state.castlingRights,
+    state.enPassantTarget
+  )
+
+  if (state.positionCounts?.[key]) {
+    return state
+  }
+
+  return {
+    ...state,
+    positionCounts: {
+      ...(state.positionCounts ?? {}),
+      [key]: state.positionCounts?.[key] ?? 1,
+    },
+  }
+}
+
 // Initial game state
-export const initialGameState: GameState = {
+export const initialGameState: GameState = seedPositionCounts({
   board: createInitialBoard(),
   currentPlayer: 'white',
   moveHistory: [],
@@ -24,7 +45,7 @@ export const initialGameState: GameState = {
   mode: 'pvp',
   aiSettings: { aiPlays: 'black', depth: 3, moveTimeMs: 1200, autoAnalyze: false, style: 'balanced' },
   aiThinking: false
-}
+})
 
 // Game state reducer
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -460,7 +481,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
 // Custom hook for chess game logic
 export const useChessGame = (initialState: GameState = initialGameState) => {
-  const [gameState, dispatch] = useReducer(gameReducer, initialState)
+  const [gameState, dispatch] = useReducer(gameReducer, initialState, seedPositionCounts)
   const aiBusyRef = useRef(false)
   
   const handleSquareClick = useCallback((square: Square) => {

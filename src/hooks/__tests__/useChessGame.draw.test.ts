@@ -2,6 +2,17 @@ import { renderHook, act } from '@testing-library/react'
 import { useChessGame, initialGameState } from '../useChessGame'
 import { createEmptyBoard, setPiece } from '../../test/chessTestUtils'
 
+const move = (
+  result: ReturnType<typeof renderHook<ReturnType<typeof useChessGame>>>['result'],
+  from: Parameters<typeof result.current.handleSquareClick>[0],
+  to: Parameters<typeof result.current.handlePieceDrop>[1]
+) => {
+  act(() => {
+    result.current.handleSquareClick(from)
+    result.current.handlePieceDrop(from, to)
+  })
+}
+
 function setupSimplePosition() {
   const board = createEmptyBoard()
   setPiece(board, 'e1', { type: 'king', color: 'white', hasMoved: false })
@@ -16,49 +27,25 @@ describe('Draw rules', () => {
     const init = setupSimplePosition()
     const { result } = renderHook(() => useChessGame(init))
 
-    act(() => {
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-      result.current.handleSquareClick('g8')
-      result.current.handlePieceDrop('g8', 'f6')
-      result.current.handleSquareClick('f3')
-      result.current.handlePieceDrop('f3', 'g1')
-      result.current.handleSquareClick('f6')
-      result.current.handlePieceDrop('f6', 'g8')
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-      result.current.handleSquareClick('g8')
-      result.current.handlePieceDrop('g8', 'f6')
-      result.current.handleSquareClick('f3')
-      result.current.handlePieceDrop('f3', 'g1')
-      result.current.handleSquareClick('f6')
-      result.current.handlePieceDrop('f6', 'g8')
-    })
+    move(result, 'g1', 'f3')
+    move(result, 'g8', 'f6')
+    move(result, 'f3', 'g1')
+    move(result, 'f6', 'g8')
+    move(result, 'g1', 'f3')
+    move(result, 'g8', 'f6')
+    move(result, 'f3', 'g1')
+    move(result, 'f6', 'g8')
 
     expect(result.current.gameState.gameStatus).toBe('draw')
   })
 
   it('declares draw on 50-move rule (no pawn move or capture)', () => {
-    const init = setupSimplePosition()
-    const { result } = renderHook(() => useChessGame(init))
-    for (let i = 0; i < 25; i++) {
-      act(() => {
-        result.current.handleSquareClick('g1')
-        result.current.handlePieceDrop('g1', 'f3')
-        result.current.handleSquareClick('g8')
-        result.current.handlePieceDrop('g8', 'f6')
-        result.current.handleSquareClick('f3')
-        result.current.handlePieceDrop('f3', 'g1')
-        result.current.handleSquareClick('f6')
-        result.current.handlePieceDrop('f6', 'g8')
-      })
+    const init = {
+      ...setupSimplePosition(),
+      halfMoveClock: 99,
     }
-    act(() => {
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-      result.current.handleSquareClick('g8')
-      result.current.handlePieceDrop('g8', 'f6')
-    })
+    const { result } = renderHook(() => useChessGame(init))
+    move(result, 'g1', 'f3')
     expect(result.current.gameState.halfMoveClock).toBeGreaterThanOrEqual(100)
     expect(result.current.gameState.gameStatus).toBe('draw')
   })

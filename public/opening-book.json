@@ -10,7 +10,7 @@
     ,
     { "moves": ["e2e4","e7e5","g1f3","b8c6","f1c4","g8f6"], "side": "black", "eco": "C56", "style": "balanced" },
     { "moves": ["e2e4","e7e5","g1f3","b8c6","f1c4","f8c5"], "side": "black", "eco": "C54", "style": "positional" },
-    { "moves": ["e2e4","e7e5","g1f3","b8c6","f1c4","g8f6","f3g5","d7d5","e4d5","c6a5"], "side": "black", "eco": "C57", "style": "aggressive" }
+    { "moves": ["e2e4","e7e5","g1f3","b8c6","f1c4","g8f6","f3g5","d7d5","e4d5","c6a5"], "side": "black", "eco": "C57", "style": "aggressive" },
     { "moves": ["e2e4","e7e5","b1c3","g8f6","f2f4","d7d5"], "side": "black", "eco": "C29", "style": "balanced" },
     { "moves": ["e2e4","e7e5","b1c3","g8f6","f2f4","e5f4","d2d4","d7d5"], "side": "black", "eco": "C29", "style": "balanced" }
   ]

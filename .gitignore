@@ -141,5 +141,8 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
+# Local worktrees
+.worktrees/
+
 # Windows shortcuts
 *.lnk

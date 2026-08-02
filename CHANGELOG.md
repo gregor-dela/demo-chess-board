@@ -4,25 +4,12 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dodano
-- restyle board stage and square states
-- redesign game control panel
-- add editorial dark app shell
-
-### Popravljeno
-- stabilize baseline tests before ui work
-
 ### Dokumentacija
-- add editorial dark ui implementation plan
-- add frontend redesign spec
-- add comprehensive Code Smell Register to track technical debt and remediation plans
-- refresh README features and structure
-- update changelog for AI and draw features
-- expand agent guidance
+- update changelog for ui refresh
 
 ### Vzdrževanje
-- ignore local worktrees
-- Osvežen CHANGELOG in marker po zadnjem commitu
+- Fix board layout collapse after adding captured pieces bars
+- Improve piece visuals + add captured pieces bars
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

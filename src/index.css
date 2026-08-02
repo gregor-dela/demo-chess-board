@@ -150,11 +150,11 @@
   }
 
   .board-stage {
-    @apply flex flex-col w-fit rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur gap-2;
+    @apply flex flex-col min-w-[max-content] shrink-0 w-fit rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur gap-2;
   }
 
   .board-stage__frame {
-    @apply inline-flex items-stretch gap-3 rounded-[1.5rem] border border-white/10 bg-slate-900/80 p-3;
+    @apply flex items-stretch shrink-0 gap-3 rounded-[1.5rem] border border-white/10 bg-slate-900/80 p-3;
   }
 
   .board-stage__main {
@@ -178,7 +178,7 @@
   }
 
   .board-grid {
-    @apply grid grid-cols-8 overflow-hidden rounded-[1.25rem] border border-white/10 bg-slate-950 shadow-[0_20px_60px_rgba(15,23,42,0.45)];
+    @apply grid grid-cols-8 shrink-0 overflow-hidden rounded-[1.25rem] border border-white/10 bg-slate-950 shadow-[0_20px_60px_rgba(15,23,42,0.45)];
   }
 
   .chess-square {

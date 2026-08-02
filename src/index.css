@@ -150,7 +150,7 @@
   }
 
   .board-stage {
-    @apply inline-flex rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur;
+    @apply flex flex-col w-fit rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur gap-2;
   }
 
   .board-stage__frame {
@@ -232,14 +232,6 @@
 
   .captured-bar {
     @apply flex h-9 w-full items-center gap-1 px-2 rounded-xl bg-slate-900/40 border border-white/10;
-  }
-
-  .board-stage > .captured-bar + .board-stage__frame {
-    @apply mt-2;
-  }
-
-  .board-stage__frame + .captured-bar {
-    @apply mt-2;
   }
 
   .captured-bar__pieces {

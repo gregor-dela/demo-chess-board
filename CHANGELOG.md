@@ -5,8 +5,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Vzdrževanje
-- min-width + shrink-0 guards prevent collapse
-- refresh changelog for UI refresh (captured pieces, piece visuals, layout fix)
+- add CapturedPieces unit + UI tests (10 test cases, 100% coverage)
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

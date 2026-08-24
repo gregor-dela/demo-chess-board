@@ -5,7 +5,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Vzdrževanje
-- add CapturedPieces unit + UI tests (10 test cases, 100% coverage)
+- final changelog marker sync before push
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

@@ -425,13 +425,49 @@ export const isStalemate = (board: Board, color: PieceColor, castlingRights?: Ca
   return !hasAnyLegalMoves(board, color, castlingRights, enPassantTarget)
 }
 
-// Centralized game status computation (active/check/checkmate/stalemate)
+// FIDE dead position rule: insufficient mating material -> draw (Article 5.2.b / 9.6)
+// Cases: K v K; K+B v K; K+N v K; K+B v K+B same square color bishops only
+// If any pawn/rook/queen remains OR >2 minor pieces OR bishops on different colors -> NOT dead
+export const isInsufficientMaterial = (board: Board): boolean => {
+  const nonKings: { piece: ChessPiece; row: number; col: number }[] = []
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const p = board[r][c]
+      if (!p) continue
+      if (p.type === 'king') continue
+      // Pawn, rook, queen can mate (or promote) -> never dead draw by material
+      if (p.type === 'pawn' || p.type === 'rook' || p.type === 'queen') return false
+      nonKings.push({ piece: p, row: r, col: c })
+    }
+  }
+
+  const n = nonKings.length
+  if (n === 0) return true // K v K
+  if (n === 1) return true // K+B v K ali K+N v K
+  if (n === 2) {
+    // K+B v K+B na isti barvi kvadratov -> draw
+    const bishopsOnly = nonKings.every(x => x.piece.type === 'bishop')
+    if (bishopsOnly) {
+      const [a, b] = nonKings
+      const sqColorA = (a.row + a.col) % 2 === 0 ? 'light' : 'dark'
+      const sqColorB = (b.row + b.col) % 2 === 0 ? 'light' : 'dark'
+      if (sqColorA === sqColorB) return true
+    }
+  }
+  return false
+}
+
+// Centralized game status computation (active/check/checkmate/stalemate/draw)
 export const computeGameStatus = (
   board: Board,
   nextToMove: PieceColor,
   castlingRights?: CastlingRights,
   enPassantTarget?: Square | null
 ): GameStatus => {
+  // FIDE dead position: insufficient material -> always draw, regardless of turn/check
+  if (isInsufficientMaterial(board)) return 'draw'
+
   const inCheck = isKingInCheck(board, nextToMove)
   const base = isCheckmate(board, nextToMove, castlingRights, enPassantTarget)
     ? 'checkmate'

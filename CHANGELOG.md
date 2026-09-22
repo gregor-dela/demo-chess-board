@@ -4,8 +4,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Vzdrževanje
-- final changelog marker sync before push
+### Dokumentacija
+- update CHANGELOG with engine + UX improvements
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

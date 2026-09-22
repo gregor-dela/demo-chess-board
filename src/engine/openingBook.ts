@@ -1,5 +1,5 @@
 import { GameState, Square } from '../types/chess'
-import { updateCastlingRightsForMove, computeEnPassantTarget, BOARD_SIZE } from '../utils/chessUtils'
+import { applyEngineMove } from '../utils/chessUtils'
 import { search } from './search'
 
 type LineMove = { from: Square, to: Square }
@@ -133,20 +133,10 @@ export async function getBookMove(state: GameState): Promise<{ from: Square, to:
   if (candidates.length === 0) return null
   candidates.sort((a, b) => b.weight - a.weight)
   for (const c of candidates) {
-    const b = state.board.map(row => [...row])
-    const [fr, fc] = [BOARD_SIZE - parseInt(c.next.from[1]), c.next.from.charCodeAt(0) - 97]
-    const [tr, tc] = [BOARD_SIZE - parseInt(c.next.to[1]), c.next.to.charCodeAt(0) - 97]
-    const moved = b[fr][fc]
-    if (!moved) {
-      continue
-    }
-    const captured = b[tr][tc]
-    b[tr][tc] = { ...moved, hasMoved: true }
-    b[fr][fc] = null
-    const nextRights = updateCastlingRightsForMove(state.castlingRights, moved, c.next.from, c.next.to, captured || undefined)
-    const nextEP = moved.type === 'pawn' ? computeEnPassantTarget(fr, tr, fc) : null
+    const applied = applyEngineMove(state.board, c.next.from, c.next.to, state.castlingRights, state.enPassantTarget ?? null)
+    if (!applied) continue
     const nextTurn = state.currentPlayer === 'white' ? 'black' : 'white'
-    const res = search(b, nextTurn, nextRights, nextEP, 2, -Infinity, Infinity)
+    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, 2, -Infinity, Infinity)
     const scoreForAi = -res.score
     if (scoreForAi > -150) return c.next
   }

@@ -53,10 +53,12 @@ const GameControls: React.FC<GameControlsProps> = ({
   onRedoMove,
   onToggleOrientation,
   onToggleMode,
+  onSetAiSettings,
 }) => {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const statusCopy = getStatusCopy(gameState)
   const currentModeLabel = gameState.mode === 'pvai' ? 'Player vs AI' : 'Player vs Player'
+  const aiSettings = gameState.aiSettings
 
   const openReset = () => setShowResetDialog(true)
   const handleConfirmReset = () => {
@@ -64,6 +66,21 @@ const GameControls: React.FC<GameControlsProps> = ({
     setShowResetDialog(false)
   }
   const handleCancelReset = () => setShowResetDialog(false)
+
+  const difficultyLabel = (depth: number): string => {
+    if (depth <= 1) return 'Easy'
+    if (depth === 2) return 'Easy-Medium'
+    if (depth === 3) return 'Medium'
+    if (depth === 4) return 'Medium-Hard'
+    if (depth === 5) return 'Hard'
+    return 'Master'
+  }
+
+  const styleLabel = (style: 'aggressive' | 'positional' | 'balanced' | undefined): string => {
+    if (style === 'aggressive') return 'Aggressive'
+    if (style === 'positional') return 'Positional'
+    return 'Balanced'
+  }
 
   return (
     <div className="control-panel">
@@ -107,6 +124,65 @@ const GameControls: React.FC<GameControlsProps> = ({
             Flip board
           </button>
         </div>
+
+        {gameState.mode === 'pvai' && aiSettings && (
+          <div className="ai-settings-stack" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <p className="control-card__eyebrow" style={{ marginTop: '0.25rem' }}>AI difficulty &amp; style</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label htmlFor="ai-depth" className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Difficulty: {difficultyLabel(aiSettings.depth ?? 3)}
+              </label>
+              <select
+                id="ai-depth"
+                aria-label="AI Difficulty"
+                value={aiSettings.depth ?? 3}
+                onChange={(e) => onSetAiSettings({ depth: Number(e.target.value) })}
+                className="w-full rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              >
+                <option value={1}>Easy (depth 1)</option>
+                <option value={2}>Easy-Medium (depth 2)</option>
+                <option value={3}>Medium (depth 3)</option>
+                <option value={4}>Medium-Hard (depth 4)</option>
+                <option value={5}>Hard (depth 5)</option>
+                <option value={6}>Master (depth 6)</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label htmlFor="ai-style" className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Play style: {styleLabel(aiSettings.style)}
+              </label>
+              <select
+                id="ai-style"
+                aria-label="AI Play Style"
+                value={aiSettings.style ?? 'balanced'}
+                onChange={(e) => onSetAiSettings({ style: e.target.value as 'aggressive' | 'positional' | 'balanced' })}
+                className="w-full rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              >
+                <option value="balanced">Balanced</option>
+                <option value="aggressive">Aggressive</option>
+                <option value="positional">Positional</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label htmlFor="ai-side" className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                AI plays as: {aiSettings.aiPlays === 'white' ? 'White' : 'Black'}
+              </label>
+              <select
+                id="ai-side"
+                aria-label="AI Side"
+                value={aiSettings.aiPlays}
+                onChange={(e) => onSetAiSettings({ aiPlays: e.target.value as 'white' | 'black' })}
+                className="w-full rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              >
+                <option value="black">Black (you play White)</option>
+                <option value="white">White (you play Black)</option>
+              </select>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="control-card" aria-labelledby="history-actions-title">

@@ -1,5 +1,5 @@
 import { PieceType, PieceColor, Square, ChessPiece, Board, CastlingRights, GameStatus, Move } from '../types/chess'
-import { getValidMoves } from './moveValidation'
+import { getValidMoves, isEnPassantMove } from './moveValidation'
 
 // Board configuration
 export const BOARD_SIZE = 8
@@ -231,20 +231,21 @@ export const buildMoveRecord = (args: {
   promotion?: PieceType
   prevHalfMoveClock?: number
   prevPositionCounts?: Record<string, number>
+  timestamp?: Date
 }): Move => {
   const {
     from, to, piece, captured,
     prevHasMoved, prevCapturedHasMoved,
     prevCastlingRights, prevEnPassantTarget,
     isEnPassant, enPassantCaptureSquare, promotion,
-    prevHalfMoveClock, prevPositionCounts
+    prevHalfMoveClock, prevPositionCounts, timestamp,
   } = args
   return {
     from,
     to,
     piece,
     notation: '',
-    timestamp: new Date(),
+    timestamp: timestamp ?? new Date(),
     captured: captured || undefined,
     prevHasMoved,
     prevCapturedHasMoved,
@@ -257,6 +258,83 @@ export const buildMoveRecord = (args: {
     prevPositionCounts,
   }
 }
+
+export interface EngineMoveResult {
+  board: Board
+  captured: ChessPiece | null
+  moved: ChessPiece
+  nextRights: CastlingRights
+  nextEnPassant: Square | null
+  isEnPassant: boolean
+  isCastling: boolean
+  promotedTo?: PieceType
+}
+
+export const applyEngineMove = (
+  board: Board,
+  from: Square,
+  to: Square,
+  rights: CastlingRights,
+  enPassantTarget: Square | null,
+  opts?: { promotionPiece?: PieceType; applyPromotion?: boolean }
+): EngineMoveResult | null => {
+  const promotionPiece = opts?.promotionPiece ?? 'queen'
+  const applyPromotion = opts?.applyPromotion ?? false
+  const b = cloneBoard(board)
+  const [fr, fc] = getCoordinatesFromSquare(from)
+  const [tr, tc] = getCoordinatesFromSquare(to)
+  const originalMoved = b[fr][fc]
+  if (!originalMoved) return null
+  const moved = { ...originalMoved }
+  let captured = b[tr][tc]
+  let isEnPassant = false
+  let promotedTo: PieceType | undefined
+  const isCastling = moved.type === 'king' && Math.abs(tc - fc) === 2
+
+  if (isCastling) {
+    applyCastlingRookMove(b, fr, fc, tc)
+  }
+
+  if (moved.type === 'pawn' && enPassantTarget && isEnPassantMove(board, from, to, enPassantTarget)) {
+    const [epRow, epCol] = getCoordinatesFromSquare(enPassantTarget)
+    const capRow = moved.color === 'white' ? epRow + 1 : epRow - 1
+    const capCol = epCol
+    captured = b[capRow][capCol]
+    b[capRow][capCol] = null
+    isEnPassant = true
+  }
+
+  let newPiece: ChessPiece = { ...moved, hasMoved: true }
+  const willPromote =
+    moved.type === 'pawn' &&
+    ((moved.color === 'white' && tr === 0) || (moved.color === 'black' && tr === 7))
+  if (willPromote) {
+    promotedTo = promotionPiece
+    if (applyPromotion) {
+      newPiece = { ...newPiece, type: promotionPiece }
+    }
+  }
+
+  b[tr][tc] = newPiece
+  b[fr][fc] = null
+
+  const nextRights = updateCastlingRightsForMove(rights, moved, from, to, captured || undefined)
+  const nextEnPassant =
+    moved.type === 'pawn' ? computeEnPassantTarget(fr, tr, fc) : null
+
+  return {
+    board: b,
+    captured: captured ?? null,
+    moved,
+    nextRights,
+    nextEnPassant,
+    isEnPassant,
+    isCastling,
+    promotedTo,
+  }
+}
+
+export const cloneBoard = (board: Board): Board => board.map(row => row.slice())
 
 // Notation helpers
 export const getPieceNotationSymbol = (type: PieceType): string => {

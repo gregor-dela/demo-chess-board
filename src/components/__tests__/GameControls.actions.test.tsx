@@ -55,4 +55,71 @@ describe('GameControls actions', () => {
     expect(onUndoMove).not.toHaveBeenCalled()
     expect(onRedoMove).not.toHaveBeenCalled()
   })
+
+  it('renders AI settings in pvai mode and fires onSetAiSettings on change', () => {
+    const onResetGame = vi.fn()
+    const onUndoMove = vi.fn()
+    const onRedoMove = vi.fn()
+    const onToggleOrientation = vi.fn()
+    const onToggleMode = vi.fn()
+    const onSetAiSettings = vi.fn()
+
+    const gs = baseGameState({
+      mode: 'pvai',
+      aiSettings: { aiPlays: 'black', depth: 3, moveTimeMs: 1200, autoAnalyze: false, style: 'balanced' },
+    })
+
+    render(
+      <GameControls
+        gameState={gs}
+        onResetGame={onResetGame}
+        onUndoMove={onUndoMove}
+        onRedoMove={onRedoMove}
+        onToggleOrientation={onToggleOrientation}
+        onToggleMode={onToggleMode}
+        onSetAiSettings={onSetAiSettings}
+      />
+    )
+
+    const depthSelect = screen.getByRole('combobox', { name: /AI Difficulty/i }) as HTMLSelectElement
+    const styleSelect = screen.getByRole('combobox', { name: /AI Play Style/i }) as HTMLSelectElement
+    const sideSelect = screen.getByRole('combobox', { name: /AI Side/i }) as HTMLSelectElement
+    expect(depthSelect).toBeInTheDocument()
+    expect(styleSelect).toBeInTheDocument()
+    expect(sideSelect).toBeInTheDocument()
+
+    fireEvent.change(depthSelect, { target: { value: '5' } })
+    expect(onSetAiSettings).toHaveBeenLastCalledWith(expect.objectContaining({ depth: 5 }))
+
+    fireEvent.change(styleSelect, { target: { value: 'aggressive' } })
+    expect(onSetAiSettings).toHaveBeenLastCalledWith(expect.objectContaining({ style: 'aggressive' }))
+
+    fireEvent.change(sideSelect, { target: { value: 'white' } })
+    expect(onSetAiSettings).toHaveBeenLastCalledWith(expect.objectContaining({ aiPlays: 'white' }))
+  })
+
+  it('does not render AI settings in pvp mode', () => {
+    const onResetGame = vi.fn()
+    const onUndoMove = vi.fn()
+    const onRedoMove = vi.fn()
+    const onToggleOrientation = vi.fn()
+    const onToggleMode = vi.fn()
+    const onSetAiSettings = vi.fn()
+
+    const gs = baseGameState({ mode: 'pvp' })
+
+    render(
+      <GameControls
+        gameState={gs}
+        onResetGame={onResetGame}
+        onUndoMove={onUndoMove}
+        onRedoMove={onRedoMove}
+        onToggleOrientation={onToggleOrientation}
+        onToggleMode={onToggleMode}
+        onSetAiSettings={onSetAiSettings}
+      />
+    )
+
+    expect(screen.queryByRole('combobox', { name: /AI Difficulty/i })).not.toBeInTheDocument()
+  })
 })

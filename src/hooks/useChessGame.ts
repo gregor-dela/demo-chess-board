@@ -2,7 +2,7 @@ import { useReducer, useCallback, useEffect, useRef } from 'react'
 import { GameState, GameAction, Square, Move, ChessPiece } from '../types/chess'
 import { createInitialBoard, getPieceAtSquare, isValidSquare, BOARD_SIZE, createInitialCastlingRights, updateCastlingRightsForMove, generateAlgebraicNotation, getCoordinatesFromSquare, computeEnPassantTarget, applyCastlingRookMove, undoCastlingRookMove, buildMoveRecord, generatePositionKey } from '../utils/chessUtils'
 import { getValidMoves, isEnPassantMove, computeGameStatus } from '../utils/moveValidation'
-import { computeBestMove } from '../engine/ai'
+import { computeBestMove, resetTranspositionTable } from '../engine/ai'
 
 const seedPositionCounts = (state: GameState): GameState => {
   const key = generatePositionKey(
@@ -483,6 +483,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 export const useChessGame = (initialState: GameState = initialGameState) => {
   const [gameState, dispatch] = useReducer(gameReducer, initialState, seedPositionCounts)
   const aiBusyRef = useRef(false)
+  const aiVersionRef = useRef(0)
+
+  const bumpAiVersion = useCallback(() => {
+    aiVersionRef.current += 1
+  }, [])
   
   const handleSquareClick = useCallback((square: Square) => {
     if (!isValidSquare(square)) return
@@ -502,52 +507,68 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
   }, [])
   
   const resetGame = useCallback(() => {
+    bumpAiVersion()
+    resetTranspositionTable()
     dispatch({ type: 'RESET_GAME' })
-  }, [])
+  }, [bumpAiVersion])
   
   const undoMove = useCallback(() => {
+    bumpAiVersion()
     dispatch({ type: 'UNDO_MOVE' })
-  }, [])
+  }, [bumpAiVersion])
   
   const redoMove = useCallback(() => {
+    bumpAiVersion()
     dispatch({ type: 'REDO_MOVE' })
-  }, [])
+  }, [bumpAiVersion])
 
   const completePromotion = useCallback((piece: 'queen' | 'rook' | 'bishop' | 'knight') => {
+    bumpAiVersion()
     dispatch({ type: 'COMPLETE_PROMOTION', piece })
-  }, [])
+  }, [bumpAiVersion])
 
   const cancelPromotion = useCallback(() => {
+    bumpAiVersion()
     dispatch({ type: 'CANCEL_PROMOTION' })
-  }, [])
+  }, [bumpAiVersion])
   
   const toggleOrientation = useCallback(() => {
     dispatch({ type: 'TOGGLE_ORIENTATION' })
   }, [])
 
   const toggleMode = useCallback(() => {
+    bumpAiVersion()
+    resetTranspositionTable()
     dispatch({ type: 'TOGGLE_MODE' })
-  }, [])
+  }, [bumpAiVersion])
 
   const setAiSettings = useCallback((settings: Partial<NonNullable<GameState['aiSettings']>>) => {
+    bumpAiVersion()
+    resetTranspositionTable()
     dispatch({ type: 'SET_AI_SETTINGS', settings })
-  }, [])
+  }, [bumpAiVersion])
   
   const requestAiMove = useCallback(async () => {
     if (gameState.mode !== 'pvai') return
     if (gameState.gameStatus !== 'active' && gameState.gameStatus !== 'check') return
     if (gameState.currentPlayer !== (gameState.aiSettings?.aiPlays ?? 'black')) return
     if (aiBusyRef.current) return
+    const versionAtRequest = aiVersionRef.current
     aiBusyRef.current = true
     dispatch({ type: 'SET_AI_THINKING', value: true })
     try {
       const best = await computeBestMove(gameState, gameState.aiSettings?.depth ?? 3, gameState.aiSettings?.moveTimeMs ?? 1000)
+      if (aiVersionRef.current !== versionAtRequest) {
+        return
+      }
       if (best) {
         dispatch({ type: 'SELECT_SQUARE', square: best.from })
         dispatch({ type: 'MAKE_MOVE', from: best.from, to: best.to })
       }
     } finally {
-      dispatch({ type: 'SET_AI_THINKING', value: false })
+      if (aiVersionRef.current === versionAtRequest) {
+        dispatch({ type: 'SET_AI_THINKING', value: false })
+      }
       aiBusyRef.current = false
     }
   }, [gameState])
@@ -555,6 +576,23 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
   useEffect(() => {
     requestAiMove()
   }, [requestAiMove])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (!mod) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undoMove()
+      } else if ((key === 'y') || (key === 'z' && e.shiftKey)) {
+        e.preventDefault()
+        redoMove()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undoMove, redoMove])
   
   return {
     gameState,

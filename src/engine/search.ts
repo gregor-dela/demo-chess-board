@@ -1,14 +1,10 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
 import { getValidMoves, isKingInCheck, computeGameStatus, isEnPassantMove } from '../utils/moveValidation'
 import { evaluate } from './evaluation'
-import { updateCastlingRightsForMove, computeEnPassantTarget, BOARD_SIZE } from '../utils/chessUtils'
+import { applyEngineMove, BOARD_SIZE } from '../utils/chessUtils'
 import { pieceValues } from './evaluation'
 import { zobristHash, TTEntry } from './zobrist'
 
-
-function cloneBoard(board: Board): Board {
-  return board.map(row => row.slice())
-}
 
 function isViennaGambitPattern(board: Board): boolean {
   const pe4 = pieceAt(board, 'e4')
@@ -21,21 +17,6 @@ function isViennaGambitPattern(board: Board): boolean {
     && pc3 && pc3.color === 'white' && pc3.type === 'knight'
     && nf6 && nf6.color === 'black' && nf6.type === 'knight'
     && pf4 && pf4.color === 'white' && pf4.type === 'pawn')
-}
-
-function apply(board: Board, from: Square, to: Square): {
-  board: Board
-  captured: ChessPiece | null
-  moved: ChessPiece
-} {
-  const b = cloneBoard(board)
-  const [fr, fc] = [BOARD_SIZE - parseInt(from[1]), from.charCodeAt(0) - 97]
-  const [tr, tc] = [BOARD_SIZE - parseInt(to[1]), to.charCodeAt(0) - 97]
-  const moved = b[fr][fc]!
-  const captured = b[tr][tc]
-  b[tr][tc] = { ...moved, hasMoved: true }
-  b[fr][fc] = null
-  return { board: b, captured: captured ?? null, moved }
 }
 
 function genMoves(board: Board, color: PieceColor, rights: CastlingRights, enPassant: Square | null): Array<{ from: Square, to: Square }> {
@@ -152,7 +133,7 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
     const base = target ? 1000 + seeGain(board, m.from, m.to, turn, rights, enPassant) : 0
     const hist = history.get(historyKey(m, turn)) || 0
     const kill = (killers[depth] || []).some(k => k.from === m.from && k.to === m.to) ? 500 : 0
-    const appliedBoard = apply(board, m.from, m.to).board
+    const appliedBoard = applyEngineMove(board, m.from, m.to, rights, enPassant)?.board ?? cloneBoard(board)
     const checkBonus = isKingInCheck(appliedBoard, turn === 'white' ? 'black' : 'white') ? 300 : 0
     const pv = pvMove && pvMove.from === m.from && pvMove.to === m.to ? 2000 : 0
     const friedLiverPenalty = (turn === 'black' && m.from === 'f6' && m.to === 'd5' && isFriedLiverPattern(board)) ? -5000 : 0
@@ -166,20 +147,19 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
   let first = true
   for (let i = 0; i < sortedMoves.length; i++) {
     const m = sortedMoves[i]
-    const applied = apply(board, m.from, m.to)
-    const nextRights = updateCastlingRightsForMove(rights, applied.moved, m.from, m.to, applied.captured || undefined)
-    const nextEP = applied.moved.type === 'pawn' ? computeEnPassantTarget(BOARD_SIZE - parseInt(m.from[1]), BOARD_SIZE - parseInt(m.to[1]), m.from.charCodeAt(0) - 97) : null
+    const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
+    if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
     if (!first) {
-      const pvs = search(applied.board, nextTurn, nextRights, nextEP, depth - 1, -alpha - 1, -alpha, tt, ply + 1)
+      const pvs = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -alpha - 1, -alpha, tt, ply + 1)
       let score = -pvs.score
       const isCapture = !!applied.captured
       if (!isCapture && depth >= 4 && i > 6) {
-        const reduced = search(applied.board, nextTurn, nextRights, nextEP, depth - 3, -alpha - 1, -alpha, tt, ply + 1)
+        const reduced = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 3, -alpha - 1, -alpha, tt, ply + 1)
         score = -reduced.score
       }
       if (score > alpha && score < beta) {
-        const full = search(applied.board, nextTurn, nextRights, nextEP, depth - 1, -beta, -alpha, tt, ply + 1)
+        const full = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1)
         score = -full.score
       }
       if (score > best.score) best = { score, move: m }
@@ -191,7 +171,7 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
       if (alpha >= beta) break
       continue
     }
-    const res = search(applied.board, nextTurn, nextRights, nextEP, depth - 1, -beta, -alpha, tt, ply + 1)
+    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1)
     const score = -res.score
     if (score > best.score) best = { score, move: m }
     if (score > alpha) alpha = score
@@ -208,11 +188,10 @@ function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPa
   if (alpha < standPat) alpha = standPat
   const caps = genCaptureMoves(board, turn, rights, enPassant)
   for (const m of caps) {
-    const applied = apply(board, m.from, m.to)
-    const nextRights = updateCastlingRightsForMove(rights, applied.moved, m.from, m.to, applied.captured || undefined)
-    const nextEP = applied.moved.type === 'pawn' ? computeEnPassantTarget(BOARD_SIZE - parseInt(m.from[1]), BOARD_SIZE - parseInt(m.to[1]), m.from.charCodeAt(0) - 97) : null
+    const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
+    if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
-    const score = -quiescence(applied.board, nextTurn, nextRights, nextEP, -beta, -alpha).score
+    const score = -quiescence(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, -beta, -alpha).score
     if (score >= beta) return { score: beta }
     if (score > alpha) alpha = score
   }

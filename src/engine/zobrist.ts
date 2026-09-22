@@ -47,7 +47,11 @@ export function zobristHash(board: Board, player: PieceColor, rights: CastlingRi
       const p: ChessPiece | null = board[r][c]
       if (!p) continue
       const idx = r * 8 + c
-      const arr = table[`${p.color}:${p.type}`]
+      const key = `${p.color}:${p.type}`
+      const arr = table[key]
+      if (!arr) {
+        throw new Error(`Zobrist missing key '${key}' at r=${r} c=${c} idx=${idx} piece=${JSON.stringify(p)}`)
+      }
       h ^= arr[idx]
     }
   }

@@ -4,8 +4,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dokumentacija
-- update CHANGELOG with engine + UX improvements
+### Vzdrževanje
+- add issue + PR templates, labels definition, milestones roadmap
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

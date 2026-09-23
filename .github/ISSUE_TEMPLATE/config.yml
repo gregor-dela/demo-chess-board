@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Dokumentacija (ARHITEKTURA)
+    url: https://github.com/gregor-dela/demo-chess-board/blob/main/docs/ARCHITECTURE.md
+    about: Predlagaš spremembo arhitekture? Preberi najprej ARHITETURO.
+  - name: Dokumentacija (PRD)
+    url: https://github.com/gregor-dela/demo-chess-board/blob/main/docs/PRD.md
+    about: Kaj je vsebino te aplikacije, v kaj ni? Preveri PRD.
+  - name: Code Smells / Tech debt
+    url: https://github.com/gregor-dela/demo-chess-board/blob/main/docs/CODE_SMELLS.md
+    about: Obstaja že predlog za refaktor? Preveri CODE_SMELLS.

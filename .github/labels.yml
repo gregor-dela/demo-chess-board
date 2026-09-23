@@ -1,0 +1,141 @@
+# Predlog label za demo-chess-board GitHub repo
+#
+# Kako uporabiti?
+#
+# 1. Prosto ročno ustvari label-e v zavihku Issues → Labels
+# 2. ALI uporabi GitHub Label Sync akcijo (preveri .github/workflows/label-sync.yml - dodaj sam)
+# 3. ALI CLI orodja, kot so `gh label create` (official GitHub CLI):
+#
+#    # Namesti gh: https://cli.github.com/
+#    gh auth login
+#    gh label create <name> --color <hex> --description "<desc>" -R gregor-dela/demo-chess-board
+#
+# Primeri:
+# gh label create bug             --color d73a4a  --description "Nekaj ni delovalo kot pričakovano"  -R gregor-dela/demo-chess-board
+# gh label create engine          --color a371f7  --description "Področje: AI engine, pravila igre, eval" -R gregor-dela/demo-chess-board
+# -------------------------------------------------------------------------------------------------------------------------------
+
+# -------- Tip issue --------
+- name: bug
+  color: d73a4a
+  description: "Nekaj ni delovalo kot pričakovano"
+
+- name: enhancement
+  color: 82b7ff
+  description: "Nova funkcionalnost ali izboljšava obstoječe"
+
+- name: documentation
+  color: 0075ca
+  description: "Izboljšave ali dodatki dokumentacije"
+
+- name: question
+  color: d876e3
+  description: "Nadaljnje informacije zahtevane"
+
+- name: wontfix
+  color: ffffff
+  description: "To ne bo popravljeno / ni na roadmapu"
+
+- name: duplicate
+  color: cfd3d7
+  description: "Ze obstaja podoben issue"
+
+- name: invalid
+  color: e4e669
+  description: "To se ne zdi relevantno za ta repo"
+
+- name: good first issue
+  color: 7057ff
+  description: "Prvi korak za novopridružene - enostavno, dobro dokumentirano"
+
+- name: help wanted
+  color: 008672
+  description: "Pomoč pričakovana - uporabnik vodi, ekipa pa lahko pomaga"
+
+# -------- Področja (areas) --------
+- name: engine
+  color: a371f7
+  description: "Področje: AI engine, search, eval, pravila igre (engine/ in utils/moveValidation)"
+
+- name: ui
+  color: 5dbf5d
+  description: "Področje: React komponente, Tailwind styling, layout (components/)"
+
+- name: ux
+  color: 9fd68a
+  description: "Področje: User experience (gumbi, bližnjice, potek potez, naravno)"
+
+- name: a11y
+  color: fbca04
+  description: "Dostopnost: tipkovnica, jest-axe, aria, screen reader, live regions"
+
+- name: hooks
+  color: ff9f7f
+  description: "Področje: useChessGame in drugi hooki (state management, reducerji)"
+
+- name: testing
+  color: fef2c0
+  description: "Področje: Vitest, coverage, jest-axe, e2e testi"
+
+- name: performance
+  color: b55c3f
+  description: "Področje: hitrost, render loops, AI depth, TT, memory"
+
+- name: ci/cd
+  color: 5d6d8f
+  description: "Področje: GitHub Actions workflows, Husky, lint, build, deploy"
+
+# -------- Prioriteta --------
+- name: priority:critical
+  color: b60205
+  description: "Priority 1/3 - app crash, poteze ne deluje, vsi blokirani"
+
+- name: priority:high
+  color: d93f0b
+  description: "Priority 2/3 - močna regresija, veliko uporabnikov, brez workarounda"
+
+- name: priority:medium
+  color: e99695
+  description: "Priority 3/3 - običajen feature, majhna napaka z workaroundom"
+
+- name: priority:low
+  color: d4c5f9
+  description: "Lepe za imeti - cosmetic, docs, minor UX"
+
+# -------- Vrsta dela (Conventional Commits) --------
+- name: type:refactor
+  color: 7ef0c4
+  description: "Kodo sem preuredil, brez spremembe APIja ali behaviorja"
+
+- name: type:chore
+  color: f9d0c4
+  description: "NPM, husky, config, dep upgrade, build scripts"
+
+- name: type:research
+  color: 1d76db
+  description: "Raziskovanje, brainstorming, design docs pred implementacijo"
+
+- name: type:regression
+  color: e11d21
+  description: "Nekaj je delovalo, zdaj ne - regresija iz prejšnjega commita"
+
+# -------- Stanje triage --------
+- name: needs-triage
+  color: e6f2ff
+  description: "Nov issue - še ni pregledan, potrebuje labels/assignee/priority"
+
+- name: needs-repro
+  color: d8f0c7
+  description: "Bug - potrebuje reproduciranje, koraki ali screenshot"
+
+- name: needs-design
+  color: e1f2fe
+  description: "Feature - potrebuje obliko / prototip pred kodo"
+
+- name: needs-tests
+  color: f8e5ab
+  description: "Koda je narejena, a manjkajo testi za coverage >80%"
+
+- name: on-hold
+  color: 9e9e9e
+  description: "Delo je začasno ustavljeno - čaka na nek drug issue / odločitev"

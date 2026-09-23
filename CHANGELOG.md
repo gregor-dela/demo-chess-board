@@ -4,8 +4,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
+### Spremenjeno
+- CS-015 Optimization #1 - odstrani computeGameStatus na srednjih search nodih
+
 ### Vzdrževanje
-- add issue + PR templates, labels definition, milestones roadmap
+- CS-015 dodaj performance test za Issue #8 optimizacijo
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

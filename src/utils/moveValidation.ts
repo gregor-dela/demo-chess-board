@@ -414,14 +414,16 @@ export const hasAnyLegalMoves = (board: Board, color: PieceColor, castlingRights
 }
 
 // New: checkmate detection
-export const isCheckmate = (board: Board, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null): boolean => {
-  if (!isKingInCheck(board, color)) return false
+export const isCheckmate = (board: Board, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null, _inCheck?: boolean): boolean => {
+  const check = _inCheck ?? isKingInCheck(board, color)
+  if (!check) return false
   return !hasAnyLegalMoves(board, color, castlingRights, enPassantTarget)
 }
 
 // New: stalemate detection
-export const isStalemate = (board: Board, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null): boolean => {
-  if (isKingInCheck(board, color)) return false
+export const isStalemate = (board: Board, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null, _inCheck?: boolean): boolean => {
+  const check = _inCheck ?? isKingInCheck(board, color)
+  if (check) return false
   return !hasAnyLegalMoves(board, color, castlingRights, enPassantTarget)
 }
 
@@ -465,13 +467,12 @@ export const computeGameStatus = (
   castlingRights?: CastlingRights,
   enPassantTarget?: Square | null
 ): GameStatus => {
-  // FIDE dead position: insufficient material -> always draw, regardless of turn/check
   if (isInsufficientMaterial(board)) return 'draw'
 
   const inCheck = isKingInCheck(board, nextToMove)
-  const base = isCheckmate(board, nextToMove, castlingRights, enPassantTarget)
+  const base = isCheckmate(board, nextToMove, castlingRights, enPassantTarget, inCheck)
     ? 'checkmate'
-    : isStalemate(board, nextToMove, castlingRights, enPassantTarget)
+    : isStalemate(board, nextToMove, castlingRights, enPassantTarget, inCheck)
       ? 'stalemate'
       : 'active'
   return base !== 'active' ? base : (inCheck ? 'check' : 'active')

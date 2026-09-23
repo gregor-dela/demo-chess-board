@@ -1,7 +1,7 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
-import { getValidMoves, isKingInCheck, computeGameStatus, isEnPassantMove } from '../utils/moveValidation'
+import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial } from '../utils/moveValidation'
 import { evaluate } from './evaluation'
-import { applyEngineMove, BOARD_SIZE } from '../utils/chessUtils'
+import { applyEngineMove, BOARD_SIZE, cloneBoard } from '../utils/chessUtils'
 import { pieceValues } from './evaluation'
 import { zobristHash, TTEntry } from './zobrist'
 
@@ -93,22 +93,13 @@ function historyKey(m: { from: Square, to: Square }, color: PieceColor) {
 
 const MATE = 100000
 export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0): { score: number, move?: { from: Square, to: Square } } {
-  // Terminal checks
-  const status = computeGameStatus(board, turn, rights, enPassant)
-  if (status === 'checkmate') {
-    // losing for side to move
-    return { score: - (MATE - ply) }
-  }
-  if (status === 'stalemate' || status === 'draw') {
-    return { score: 0 }
-  }
-  // Check extension: extend depth by 1 if in check
-  if (status === 'check') depth = Math.max(0, depth + 1)
+  if (isInsufficientMaterial(board)) return { score: 0 }
+  const inCheck = isKingInCheck(board, turn)
+  if (inCheck) depth = Math.max(0, depth + 1)
   if (depth === 0) {
     return quiescence(board, turn, rights, enPassant, alpha, beta)
   }
-  // Null-move pruning: if not in check and sufficient depth
-  if (status !== 'check' && depth >= 3) {
+  if (!inCheck && depth >= 3) {
     const R = depth >= 5 ? 2 : 1
     const nullTurn = turn === 'white' ? 'black' : 'white'
     const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1)
@@ -123,6 +114,9 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
     if (e.depth >= depth) return { score: e.score, move: e.move }
   }
   const moves = genMoves(board, turn, rights, enPassant)
+  if (moves.length === 0) {
+    return inCheck ? { score: -(MATE - ply) } : { score: 0 }
+  }
   let pvMove: { from: Square, to: Square } | undefined
   if (tt && tt.has(key)) {
     const e = tt.get(key)!

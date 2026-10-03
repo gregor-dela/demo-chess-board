@@ -291,6 +291,89 @@ function kingSafety(board: Board): number {
   return s
 }
 
+type SimpleEndgame = 'none' | 'KQvsK' | 'KRvsK' | 'KBvsK' | 'KNvsK'
+
+function detectSimpleEndgame(board: Board): { whiteMat: number; blackMat: number; kind: SimpleEndgame } {
+  let wm = 0, bm = 0
+  let wq = 0, wr = 0, wb = 0, wn = 0
+  let bq = 0, br = 0, bb = 0, bn = 0
+  let wp = 0, bp = 0
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const p = board[r][c]
+    if (!p) continue
+    const v = pieceValues[p.type]
+    if (p.color === 'white') {
+      wm += v
+      if (p.type === 'queen') wq++
+      else if (p.type === 'rook') wr++
+      else if (p.type === 'bishop') wb++
+      else if (p.type === 'knight') wn++
+      else if (p.type === 'pawn') wp++
+    } else {
+      bm += v
+      if (p.type === 'queen') bq++
+      else if (p.type === 'rook') br++
+      else if (p.type === 'bishop') bb++
+      else if (p.type === 'knight') bn++
+      else if (p.type === 'pawn') bp++
+    }
+  }
+  let kind: SimpleEndgame = 'none'
+  if (wp === 0 && bp === 0 && wb === 0 && wn === 0 && wr === 0 && wq === 1 && bq === 0 && br === 0 && bb === 0 && bn === 0) kind = 'KQvsK'
+  else if (wp === 0 && bp === 0 && bb === 0 && bn === 0 && br === 0 && bq === 1 && wq === 0 && wr === 0 && wb === 0 && wn === 0) kind = 'KQvsK'
+  else if (wp === 0 && bp === 0 && wb === 0 && wn === 0 && wq === 0 && wr === 1 && bq === 0 && br === 0 && bb === 0 && bn === 0) kind = 'KRvsK'
+  else if (wp === 0 && bp === 0 && bb === 0 && bn === 0 && bq === 0 && br === 1 && wq === 0 && wr === 0 && wb === 0 && wn === 0) kind = 'KRvsK'
+  else if (wp === 0 && bp === 0 && wn === 0 && wq === 0 && wr === 0 && wb === 1 && bq === 0 && br === 0 && bb === 0 && bn === 0) kind = 'KBvsK'
+  else if (wp === 0 && bp === 0 && bn === 0 && bq === 0 && br === 0 && bb === 1 && wq === 0 && wr === 0 && wb === 0 && wn === 0) kind = 'KBvsK'
+  else if (wp === 0 && bp === 0 && wb === 0 && wq === 0 && wr === 0 && wn === 1 && bq === 0 && br === 0 && bb === 0 && bn === 0) kind = 'KNvsK'
+  else if (wp === 0 && bp === 0 && bb === 0 && bq === 0 && br === 0 && bn === 1 && wq === 0 && wr === 0 && wb === 0 && wn === 0) kind = 'KNvsK'
+  return { whiteMat: wm, blackMat: bm, kind }
+}
+
+function kingDistToCorner(r: number, c: number): number {
+  const d1 = Math.max(r, c)
+  const d2 = Math.max(r, 7 - c)
+  const d3 = Math.max(7 - r, c)
+  const d4 = Math.max(7 - r, 7 - c)
+  return Math.min(d1, d2, d3, d4)
+}
+function kingDistToEdge(r: number, c: number): number {
+  return Math.min(r, c, 7 - r, 7 - c)
+}
+function manhattan(a: [number, number], b: [number, number]): number {
+  return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])
+}
+function chebyshev(a: [number, number], b: [number, number]): number {
+  return Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]))
+}
+
+function forcedMateEndgameHeuristic(board: Board): number {
+  const result = detectSimpleEndgame(board)
+  if (result.kind === 'none') return 0
+  let wk: [number, number] | null = null
+  let bk: [number, number] | null = null
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const p = board[r][c]
+    if (p && p.type === 'king') {
+      if (p.color === 'white') wk = [r, c]
+      else bk = [r, c]
+    }
+  }
+  if (!wk || !bk) return 0
+  const strongIsWhite = result.whiteMat > result.blackMat
+  const strongK = strongIsWhite ? wk : bk
+  const weakK = strongIsWhite ? bk : wk
+  let s = 0
+  s += (7 - kingDistToCorner(weakK[0], weakK[1])) * 80
+  s += (7 - kingDistToEdge(weakK[0], weakK[1])) * 40
+  s += (14 - chebyshev(strongK, weakK)) * 20
+  if (result.kind === 'KRvsK' || result.kind === 'KQvsK') {
+    s += (14 - manhattan(strongK, weakK)) * 12
+  }
+  if (result.kind === 'KBvsK' || result.kind === 'KNvsK') return 0
+  return strongIsWhite ? s : -s
+}
+
 export function evaluate(board: Board, turn: PieceColor): number {
   let scoreMg = 0
   let scoreEg = 0
@@ -320,5 +403,7 @@ export function evaluate(board: Board, turn: PieceColor): number {
   const egWeight = phase / maxPhase
   const mgWeight = 1 - egWeight
   const tapered = Math.floor(scoreMg * mgWeight + scoreEg * egWeight)
-  return turn === 'white' ? tapered : -tapered
+  const endgameHeur = forcedMateEndgameHeuristic(board)
+  const final = tapered + endgameHeur * 3
+  return turn === 'white' ? final : -final
 }

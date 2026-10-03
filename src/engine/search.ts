@@ -84,15 +84,23 @@ function seeGain(board: Board, from: Square, to: Square, turn: PieceColor, right
   return base - oppAttackers[0].val
 }
 
-const killers: Record<number, { from: Square, to: Square }[]> = {}
-const history: Map<string, number> = new Map()
+const MATE = 100000
+const INF = 1000000000
+let killers: Record<number, { from: Square, to: Square }[]> = {}
+let history: Map<string, number> = new Map()
+
+export function resetSearchGlobals(): void {
+  killers = {}
+  history = new Map()
+}
 
 function historyKey(m: { from: Square, to: Square }, color: PieceColor) {
   return `${color}:${m.from}->${m.to}`
 }
 
-const MATE = 100000
 export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0): { score: number, move?: { from: Square, to: Square } } {
+  alpha = Math.max(alpha, -INF)
+  beta = Math.min(beta, INF)
   if (isInsufficientMaterial(board)) return { score: 0 }
   const inCheck = isKingInCheck(board, turn)
   if (inCheck) depth = Math.max(0, depth + 1)
@@ -177,6 +185,8 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
 }
 
 function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, alpha: number, beta: number): { score: number } {
+  alpha = Math.max(alpha, -INF)
+  beta = Math.min(beta, INF)
   const standPat = evaluate(board, turn)
   if (standPat >= beta) return { score: beta }
   if (alpha < standPat) alpha = standPat

@@ -1,5 +1,5 @@
 import { GameState, Square } from '../types/chess'
-import { search } from './search'
+import { search, resetSearchGlobals } from './search'
 import { TTEntry } from './zobrist'
 import { getBookMove } from './openingBook'
 // analysis helpers removed
@@ -9,6 +9,7 @@ const TT_MAX_SIZE = 100000
 
 export function resetTranspositionTable(): void {
   GLOBAL_TT.clear()
+  resetSearchGlobals()
 }
 
 export async function computeBestMove(state: GameState, depth = 3, moveTimeMs = 1000): Promise<{ from: Square, to: Square } | null> {

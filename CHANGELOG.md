@@ -4,8 +4,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
+### Popravljeno
+- INF clamp, endgame heuristics KR typo, resetSearchGlobals
+
 ### Vzdrževanje
-- posodobi CHANGELOG.md za CS-015 Issue #8 optimizacijo
+- CS-009 endgame KQ/KR vs K + CS-005 draw integration tests
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

@@ -4,11 +4,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Popravljeno
-- INF clamp, endgame heuristics KR typo, resetSearchGlobals
+### Dodano
+- prenesi halfMoveClock skozi search/evaluate + unit testi endgame hevristik
 
 ### Vzdrževanje
-- CS-009 endgame KQ/KR vs K + CS-005 draw integration tests
+- update changelog and last-sha for Issue #9/#5 work
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

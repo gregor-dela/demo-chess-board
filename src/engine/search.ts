@@ -98,19 +98,19 @@ function historyKey(m: { from: Square, to: Square }, color: PieceColor) {
   return `${color}:${m.from}->${m.to}`
 }
 
-export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0): { score: number, move?: { from: Square, to: Square } } {
+export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0, halfMoveClock: number = 0): { score: number, move?: { from: Square, to: Square } } {
   alpha = Math.max(alpha, -INF)
   beta = Math.min(beta, INF)
   if (isInsufficientMaterial(board)) return { score: 0 }
   const inCheck = isKingInCheck(board, turn)
   if (inCheck) depth = Math.max(0, depth + 1)
   if (depth === 0) {
-    return quiescence(board, turn, rights, enPassant, alpha, beta)
+    return quiescence(board, turn, rights, enPassant, alpha, beta, halfMoveClock)
   }
   if (!inCheck && depth >= 3) {
     const R = depth >= 5 ? 2 : 1
     const nullTurn = turn === 'white' ? 'black' : 'white'
-    const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1)
+    const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1, halfMoveClock + 1)
     const nullScore = -nullRes.score
     if (nullScore >= beta) {
       return { score: beta }
@@ -152,16 +152,19 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
     const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
     if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
+    const movingPiece = board[BOARD_SIZE - parseInt(m.from[1])][m.from.charCodeAt(0) - 97]
+    const isPawnMove = !!(movingPiece && movingPiece.type === 'pawn')
+    const nextClock = (applied.captured || isPawnMove) ? 0 : halfMoveClock + 1
     if (!first) {
-      const pvs = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -alpha - 1, -alpha, tt, ply + 1)
+      const pvs = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -alpha - 1, -alpha, tt, ply + 1, nextClock)
       let score = -pvs.score
       const isCapture = !!applied.captured
       if (!isCapture && depth >= 4 && i > 6) {
-        const reduced = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 3, -alpha - 1, -alpha, tt, ply + 1)
+        const reduced = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 3, -alpha - 1, -alpha, tt, ply + 1, nextClock)
         score = -reduced.score
       }
       if (score > alpha && score < beta) {
-        const full = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1)
+        const full = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock)
         score = -full.score
       }
       if (score > best.score) best = { score, move: m }
@@ -173,7 +176,7 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
       if (alpha >= beta) break
       continue
     }
-    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1)
+    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock)
     const score = -res.score
     if (score > best.score) best = { score, move: m }
     if (score > alpha) alpha = score
@@ -184,10 +187,10 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
   return best
 }
 
-function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, alpha: number, beta: number): { score: number } {
+function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, alpha: number, beta: number, halfMoveClock: number = 0): { score: number } {
   alpha = Math.max(alpha, -INF)
   beta = Math.min(beta, INF)
-  const standPat = evaluate(board, turn)
+  const standPat = evaluate(board, turn, halfMoveClock)
   if (standPat >= beta) return { score: beta }
   if (alpha < standPat) alpha = standPat
   const caps = genCaptureMoves(board, turn, rights, enPassant)
@@ -195,7 +198,7 @@ function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPa
     const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
     if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
-    const score = -quiescence(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, -beta, -alpha).score
+    const score = -quiescence(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, -beta, -alpha, 0).score
     if (score >= beta) return { score: beta }
     if (score > alpha) alpha = score
   }

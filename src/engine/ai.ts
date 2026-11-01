@@ -32,9 +32,9 @@ export async function computeBestMove(state: GameState, depth = 3, moveTimeMs = 
     const window = style === 'aggressive' ? 150 : style === 'positional' ? 80 : 100
     const alpha = lastScore - window
     const beta = lastScore + window
-    let res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, alpha, beta, tt)
+    let res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, alpha, beta, tt, 0, state.halfMoveClock ?? 0)
     if (!res.move || res.score <= alpha || res.score >= beta) {
-      res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, -Infinity, Infinity, tt)
+      res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, -Infinity, Infinity, tt, 0, state.halfMoveClock ?? 0)
     }
     if (res.move) best = res.move
     lastScore = res.score

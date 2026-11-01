@@ -347,16 +347,20 @@ function chebyshev(a: [number, number], b: [number, number]): number {
   return Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]))
 }
 
-function forcedMateEndgameHeuristic(board: Board): number {
+function forcedMateEndgameHeuristic(board: Board, turn: PieceColor, halfMoveClock: number): number {
   const result = detectSimpleEndgame(board)
   if (result.kind === 'none') return 0
   let wk: [number, number] | null = null
   let bk: [number, number] | null = null
+  let major: { r: number, c: number, type: 'queen' | 'rook', color: PieceColor } | null = null
   for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
     const p = board[r][c]
-    if (p && p.type === 'king') {
+    if (!p) continue
+    if (p.type === 'king') {
       if (p.color === 'white') wk = [r, c]
       else bk = [r, c]
+    } else if ((p.type === 'queen' || p.type === 'rook') && (result.kind === 'KQvsK' || result.kind === 'KRvsK')) {
+      major = { r, c, type: p.type as 'queen' | 'rook', color: p.color }
     }
   }
   if (!wk || !bk) return 0
@@ -364,17 +368,80 @@ function forcedMateEndgameHeuristic(board: Board): number {
   const strongK = strongIsWhite ? wk : bk
   const weakK = strongIsWhite ? bk : wk
   let s = 0
-  s += (7 - kingDistToCorner(weakK[0], weakK[1])) * 80
+  s += (7 - kingDistToCorner(weakK[0], weakK[1])) * 60
   s += (7 - kingDistToEdge(weakK[0], weakK[1])) * 40
-  s += (14 - chebyshev(strongK, weakK)) * 20
+  s += (14 - chebyshev(strongK, weakK)) * 200
   if (result.kind === 'KRvsK' || result.kind === 'KQvsK') {
-    s += (14 - manhattan(strongK, weakK)) * 12
+    s += (14 - manhattan(strongK, weakK)) * 80
+    if (major) {
+      const [wr, wc] = weakK
+      const drs = [-1, -1, -1, 0, 0, 1, 1, 1]
+      const dcs = [-1, 0, 1, -1, 1, -1, 0, 1]
+      let weakLegal = 0
+      for (let i = 0; i < 8; i++) {
+        const nr = wr + drs[i]
+        const nc = wc + dcs[i]
+        if (nr < 0 || nr > 7 || nc < 0 || nc > 7) continue
+        let attacked = false
+        if (major.type === 'rook' || major.type === 'queen') {
+          if (nr === major.r) {
+            attacked = true
+            const step = nc < major.c ? -1 : 1
+            for (let cc = major.c + step; cc !== nc; cc += step) {
+              if (board[nr][cc]) { attacked = false; break }
+            }
+          }
+          if (!attacked && nc === major.c) {
+            attacked = true
+            const step = nr < major.r ? -1 : 1
+            for (let rr = major.r + step; rr !== nr; rr += step) {
+              if (board[rr][nc]) { attacked = false; break }
+            }
+          }
+        }
+        if (major.type === 'queen') {
+          if (!attacked && Math.abs(nr - major.r) === Math.abs(nc - major.c)) {
+            attacked = true
+            const rstep = nr < major.r ? -1 : 1
+            const cstep = nc < major.c ? -1 : 1
+            let rr = major.r + rstep
+            let cc = major.c + cstep
+            while (rr !== nr && cc !== nc) {
+              if (board[rr][cc]) { attacked = false; break }
+              rr += rstep
+              cc += cstep
+            }
+          }
+        }
+        const occup = board[nr][nc]
+        if (occup && occup.type === 'king' && occup.color === (strongIsWhite ? 'white' : 'black')) continue
+        if (!attacked) weakLegal++
+      }
+      s += (8 - weakLegal) * 150
+      let minR = Math.min(wr, strongK[0])
+      let maxR = Math.max(wr, strongK[0])
+      let minC = Math.min(wc, strongK[1])
+      let maxC = Math.max(wc, strongK[1])
+      if (major) {
+        minR = Math.min(minR, major.r)
+        maxR = Math.max(maxR, major.r)
+        minC = Math.min(minC, major.c)
+        maxC = Math.max(maxC, major.c)
+      }
+      const boxArea = (maxR - minR + 1) * (maxC - minC + 1)
+      s += (64 - boxArea) * 40
+    }
   }
   if (result.kind === 'KBvsK' || result.kind === 'KNvsK') return 0
+  const strongTurn = strongIsWhite ? turn === 'white' : turn === 'black'
+  if (strongTurn && halfMoveClock > 20) {
+    const excess = halfMoveClock - 20
+    s -= Math.min(excess * excess, 100) * 20
+  }
   return strongIsWhite ? s : -s
 }
 
-export function evaluate(board: Board, turn: PieceColor): number {
+export function evaluate(board: Board, turn: PieceColor, halfMoveClock = 0): number {
   let scoreMg = 0
   let scoreEg = 0
   let phase = 0
@@ -403,7 +470,7 @@ export function evaluate(board: Board, turn: PieceColor): number {
   const egWeight = phase / maxPhase
   const mgWeight = 1 - egWeight
   const tapered = Math.floor(scoreMg * mgWeight + scoreEg * egWeight)
-  const endgameHeur = forcedMateEndgameHeuristic(board)
+  const endgameHeur = forcedMateEndgameHeuristic(board, turn, halfMoveClock)
   const final = tapered + endgameHeur * 3
   return turn === 'white' ? final : -final
 }

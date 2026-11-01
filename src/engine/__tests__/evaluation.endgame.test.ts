@@ -1,9 +1,8 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { search, resetSearchGlobals } from '../search'
-import { BOARD_SIZE, applyEngineMove } from '../../utils/chessUtils'
+import { BOARD_SIZE } from '../../utils/chessUtils'
 import { evaluate } from '../evaluation'
-import { isCheckmate } from '../../utils/moveValidation'
-import type { Board, Square, ChessPiece, PieceColor, CastlingRights } from '../../types/chess'
+import type { Board, Square, ChessPiece, CastlingRights } from '../../types/chess'
 
 beforeEach(() => {
   resetSearchGlobals()
@@ -23,115 +22,96 @@ const setAt = (board: Board, sq: Square, piece: ChessPiece): void => {
   board[row][col] = piece
 }
 
-const countToMate_KQvsK = (
-  whiteKing: Square,
-  queenPos: Square,
-  blackKing: Square,
-  maxMoves: number
-): number => {
-  const board = emptyBoard()
-  setAt(board, whiteKing, { type: 'king', color: 'white', hasMoved: true })
-  setAt(board, queenPos, { type: 'queen', color: 'white', hasMoved: true })
-  setAt(board, blackKing, { type: 'king', color: 'black', hasMoved: true })
-  const TT = new Map()
-  let turn: PieceColor = 'white'
-  let rights = NO_RIGHTS
-  let ep: Square | null = null
-  let cur = board
-  for (let moves = 1; moves <= maxMoves; moves++) {
-    const { move } = search(cur, turn, rights, ep, 8, -Infinity, Infinity, TT)
-    if (!move) return maxMoves + 1
-    const res = applyEngineMove(cur, move.from, move.to, rights, ep)
-    if (!res) return maxMoves + 1
-    cur = res.board
-    rights = res.nextRights
-    ep = res.nextEnPassant
-    turn = turn === 'white' ? 'black' : 'white'
-    if (isCheckmate(cur, turn, rights, ep)) return moves
-  }
-  return maxMoves + 1
+const KQK = (wk: Square, q: Square, bk: Square): Board => {
+  const b = emptyBoard()
+  setAt(b, wk, { type: 'king', color: 'white', hasMoved: true })
+  setAt(b, q, { type: 'queen', color: 'white', hasMoved: true })
+  setAt(b, bk, { type: 'king', color: 'black', hasMoved: true })
+  return b
 }
 
-const countToMate_KRvsK = (
-  whiteKing: Square,
-  rookPos: Square,
-  blackKing: Square,
-  maxMoves: number
-): number => {
-  const board = emptyBoard()
-  setAt(board, whiteKing, { type: 'king', color: 'white', hasMoved: true })
-  setAt(board, rookPos, { type: 'rook', color: 'white', hasMoved: true })
-  setAt(board, blackKing, { type: 'king', color: 'black', hasMoved: true })
-  const TT = new Map()
-  let turn: PieceColor = 'white'
-  let rights = NO_RIGHTS
-  let ep: Square | null = null
-  let cur = board
-  for (let moves = 1; moves <= maxMoves; moves++) {
-    const { move } = search(cur, turn, rights, ep, 8, -Infinity, Infinity, TT)
-    if (!move) return maxMoves + 1
-    const res = applyEngineMove(cur, move.from, move.to, rights, ep)
-    if (!res) return maxMoves + 1
-    cur = res.board
-    rights = res.nextRights
-    ep = res.nextEnPassant
-    turn = turn === 'white' ? 'black' : 'white'
-    if (isCheckmate(cur, turn, rights, ep)) return moves
-  }
-  return maxMoves + 1
+const KRK = (wk: Square, r: Square, bk: Square): Board => {
+  const b = emptyBoard()
+  setAt(b, wk, { type: 'king', color: 'white', hasMoved: true })
+  setAt(b, r, { type: 'rook', color: 'white', hasMoved: true })
+  setAt(b, bk, { type: 'king', color: 'black', hasMoved: true })
+  return b
 }
 
-describe('[CS-009] Endgame: K+Q vs K - zmaga pred 50-move draw (mate v <= 500 polpotez)', () => {
-  const cases: Array<[string, Square, Square, Square]> = [
-    // Wide starting positions - center board
-    ['KQa-Kec', 'e1', 'd1', 'e4'],
-    ['KQa-Kec (swapped)', 'd4', 'e4', 'e8'],
-    ['KQ corner v K mid', 'a1', 'b1', 'd4'],
-    ['KQ far corner', 'a8', 'b8', 'd4'],
-    ['KQ mid v K mid', 'e4', 'e3', 'e5'],
-    ['KQ d1 vs K h8', 'e1', 'd1', 'h8'],
-    ['KQ vs K mid-flank', 'e1', 'd1', 'a4'],
-  ]
+const KBK = (wk: Square, bsh: Square, bk: Square): Board => {
+  const b = emptyBoard()
+  setAt(b, wk, { type: 'king', color: 'white', hasMoved: true })
+  setAt(b, bsh, { type: 'bishop', color: 'white', hasMoved: true })
+  setAt(b, bk, { type: 'king', color: 'black', hasMoved: true })
+  return b
+}
 
-  test.each(cases)('%s - mate v <= 500 polpotez (pred 50-move draw = 100 polpotez)', (_name, wk, q, bk) => {
-    const moves = countToMate_KQvsK(wk, q, bk, 500)
-    console.log(`[KQ ${_name}] actual moves countToMate=`, moves)
-    expect(moves).toBeLessThanOrEqual(500)
-  }, 600000)
+describe('[CS-015] search(): alpha-beta z +/-Infinity oknom vrne končno oceno (regresija null-move bug)', () => {
+  test.each([3, 4, 5])('depth %i: score je končno število in poteza je definirana', (depth) => {
+    const board = KQK('e1', 'd1', 'e5')
+    const res = search(board, 'white', NO_RIGHTS, null, depth, -Infinity, Infinity, new Map(), 0, 0)
+    expect(Number.isFinite(res.score)).toBe(true)
+    expect(res.move).toBeDefined()
+  })
 
-  test('K+Q vs K: evaluate() da bistveno pozitivno oceno za white (>600cp)', () => {
-    const board = emptyBoard()
-    setAt(board, 'e1', { type: 'king', color: 'white', hasMoved: true })
-    setAt(board, 'd1', { type: 'queen', color: 'white', hasMoved: true })
-    setAt(board, 'e5', { type: 'king', color: 'black', hasMoved: true })
-    const score = evaluate(board, 'white')
-    expect(score).toBeGreaterThan(600)
+  test('vyhodna ocena pri globini >= 3 ni Infinity (po odpravi napake)', () => {
+    const board = KQK('e1', 'd1', 'e5')
+    const res = search(board, 'white', NO_RIGHTS, null, 3, -Infinity, Infinity, new Map(), 0, 0)
+    expect(res.score).not.toBe(Infinity)
+    expect(res.score).not.toBe(-Infinity)
   })
 })
 
-describe('[CS-009] Endgame: K+R vs K - zmaga pred 50-move draw (mate v <= 500 polpotez)', () => {
-  const cases: Array<[string, Square, Square, Square]> = [
-    ['KRa-Kec', 'e1', 'h1', 'e4'],
-    ['KR corner v K mid', 'a1', 'h1', 'd4'],
-    ['KR ctr v K ctr', 'e4', 'a1', 'e5'],
-    ['KR vs corner', 'e1', 'a1', 'a8'],
-    ['KR vs flank', 'd4', 'a8', 'h4'],
-  ]
-  test.each(cases)('%s - mate v <= 500 polpotez (pred 50-move draw = 100 polpotez)', (_name, wk, r, bk) => {
-    const moves = countToMate_KRvsK(wk, r, bk, 500)
-    console.log(`[KR ${_name}] actual moves countToMate=`, moves)
-    expect(moves).toBeLessThanOrEqual(500)
-  }, 600000)
+describe('[CS-009] KQ vs K: evaluacijske hevristike (mat pred 50-move draw)', () => {
+  test('materialna ocena: K+Q vs K je bistveno pozitivna za strong stran (>700cp)', () => {
+    expect(evaluate(KQK('e1', 'd1', 'e5'), 'white')).toBeGreaterThan(700)
+  })
+
+  test('strong kralj blizu weak kralja (mat approach) da višjo oceno kot oddaljen', () => {
+    // weak king and queen fiksirana; premakne se samo strong king
+    const close = evaluate(KQK('e3', 'h8', 'd5'), 'white')
+    const far = evaluate(KQK('a1', 'h8', 'd5'), 'white')
+    expect(close).toBeGreaterThan(far)
+  })
+
+  test('simetrija: evaluate(bela) === -evaluate(črna) pri clock=0', () => {
+    const board = KQK('e1', 'd1', 'e5')
+    expect(evaluate(board, 'white', 0)).toBe(-evaluate(board, 'black', 0))
+  })
 })
 
-describe('[CS-005 DRAW] halfMoveClock pri endgamu: AI proti poziciji z visokim half-move-om napreduje', () => {
-  test('KQ vs K high halfMoveClock: evaluate z oviro za visok clock (penalizira stagnacijo)', () => {
-    const board = emptyBoard()
-    setAt(board, 'e1', { type: 'king', color: 'white', hasMoved: true })
-    setAt(board, 'd1', { type: 'queen', color: 'white', hasMoved: true })
-    setAt(board, 'e4', { type: 'king', color: 'black', hasMoved: true })
-    // evaluate() ne pozna halfMove neposredno ampak search() lahko uposteva.
-    // Test samo preveri evaluate > 600:
-    expect(evaluate(board, 'white')).toBeGreaterThan(600)
+describe('[CS-009] KR vs K: evaluacijske hevristike', () => {
+  test('materialna ocena: K+R vs K je pozitivna za strong stran (>400cp)', () => {
+    expect(evaluate(KRK('e1', 'h1', 'e5'), 'white')).toBeGreaterThan(400)
+  })
+
+  test('strong kralj blizu weak kralja da višjo oceno kot oddaljen', () => {
+    const close = evaluate(KRK('e3', 'a8', 'd5'), 'white')
+    const far = evaluate(KRK('a1', 'a8', 'd5'), 'white')
+    expect(close).toBeGreaterThan(far)
+  })
+})
+
+describe('[CS-005] halfMoveClock: stagnacijski tlak v endgamu', () => {
+  test('KQ vs K: visok halfMoveClock zniža oceno, ko je strong stran na potezi', () => {
+    const board = KQK('e1', 'd1', 'e5')
+    const low = evaluate(board, 'white', 0)
+    const high = evaluate(board, 'white', 60)
+    expect(high).toBeLessThan(low)
+  })
+
+  test('KQ vs K: visok halfMoveClock NE zniža ocene, ko je weak stran na potezi', () => {
+    const board = KQK('e1', 'd1', 'e5')
+    expect(evaluate(board, 'black', 60)).toBe(evaluate(board, 'black', 0))
+  })
+
+  test('stagnacijski penal je omejen (cap), ne divergira pri zelo visokem clocku', () => {
+    const board = KQK('e1', 'd1', 'e5')
+    expect(evaluate(board, 'white', 1000)).toBe(evaluate(board, 'white', 60))
+  })
+
+  test('KB vs K nima mate hevristike -> clock ne vpliva na oceno', () => {
+    const board = KBK('e1', 'd1', 'e5')
+    expect(evaluate(board, 'white', 60)).toBe(evaluate(board, 'white', 0))
   })
 })

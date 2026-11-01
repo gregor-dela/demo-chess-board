@@ -4,11 +4,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dodano
-- prenesi halfMoveClock skozi search/evaluate + unit testi endgame hevristik
-
 ### Vzdrževanje
-- update changelog and last-sha for Issue #9/#5 work
+- posodobi CHANGELOG za halfMoveClock + endgame hevristike
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

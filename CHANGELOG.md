@@ -4,8 +4,12 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
+### Popravljeno
+- zaznaj remi v search() in odpravi neskončno zanko v evaluaciji
+
 ### Vzdrževanje
 - posodobi CHANGELOG za halfMoveClock + endgame hevristike
+- sync .changelog-last-sha
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

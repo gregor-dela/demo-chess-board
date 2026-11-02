@@ -1,8 +1,7 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
 import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial } from '../utils/moveValidation'
-import { evaluate } from './evaluation'
+import { evaluate, detectSimpleEndgame, pieceValues } from './evaluation'
 import { applyEngineMove, BOARD_SIZE, cloneBoard, generatePositionKey } from '../utils/chessUtils'
-import { pieceValues } from './evaluation'
 import { zobristHash, TTEntry } from './zobrist'
 
 
@@ -139,7 +138,7 @@ function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPa
   if (depth === 0) {
     return quiescence(board, turn, rights, enPassant, alpha, beta, halfMoveClock)
   }
-  if (!inCheck && depth >= 3) {
+  if (!inCheck && depth >= 3 && detectSimpleEndgame(board).kind === 'none') {
     const R = depth >= 5 ? 2 : 1
     const nullTurn = turn === 'white' ? 'black' : 'white'
     const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1, halfMoveClock + 1, repCtx)

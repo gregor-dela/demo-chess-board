@@ -293,7 +293,7 @@ function kingSafety(board: Board): number {
 
 type SimpleEndgame = 'none' | 'KQvsK' | 'KRvsK' | 'KBvsK' | 'KNvsK'
 
-function detectSimpleEndgame(board: Board): { whiteMat: number; blackMat: number; kind: SimpleEndgame } {
+export function detectSimpleEndgame(board: Board): { whiteMat: number; blackMat: number; kind: SimpleEndgame } {
   let wm = 0, bm = 0
   let wq = 0, wr = 0, wb = 0, wn = 0
   let bq = 0, br = 0, bb = 0, bn = 0
@@ -368,11 +368,11 @@ function forcedMateEndgameHeuristic(board: Board, turn: PieceColor, halfMoveCloc
   const strongK = strongIsWhite ? wk : bk
   const weakK = strongIsWhite ? bk : wk
   let s = 0
-  s += (7 - kingDistToCorner(weakK[0], weakK[1])) * 60
+  s += (7 - kingDistToCorner(weakK[0], weakK[1])) * 80
   s += (7 - kingDistToEdge(weakK[0], weakK[1])) * 40
-  s += (14 - chebyshev(strongK, weakK)) * 200
+  s += (14 - chebyshev(strongK, weakK)) * 20
   if (result.kind === 'KRvsK' || result.kind === 'KQvsK') {
-    s += (14 - manhattan(strongK, weakK)) * 80
+    s += (14 - manhattan(strongK, weakK)) * 12
     if (major) {
       const [wr, wc] = weakK
       const drs = [-1, -1, -1, 0, 0, 1, 1, 1]

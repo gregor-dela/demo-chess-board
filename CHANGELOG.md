@@ -5,9 +5,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Popravljeno
+- izboljšaj matiranje v končnicah KQ/KR vs K
 - zaznaj remi v search() in odpravi neskončno zanko v evaluaciji
 
 ### Vzdrževanje
+- posodobi CHANGELOG za CS-010 (draw detection + fix eval loop)
 - posodobi CHANGELOG za halfMoveClock + endgame hevristike
 - sync .changelog-last-sha
 

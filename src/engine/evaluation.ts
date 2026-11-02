@@ -388,6 +388,7 @@ function forcedMateEndgameHeuristic(board: Board, turn: PieceColor, halfMoveCloc
             attacked = true
             const step = nc < major.c ? -1 : 1
             for (let cc = major.c + step; cc !== nc; cc += step) {
+              if (cc < 0 || cc > 7) { break }
               if (board[nr][cc]) { attacked = false; break }
             }
           }
@@ -395,6 +396,7 @@ function forcedMateEndgameHeuristic(board: Board, turn: PieceColor, halfMoveCloc
             attacked = true
             const step = nr < major.r ? -1 : 1
             for (let rr = major.r + step; rr !== nr; rr += step) {
+              if (rr < 0 || rr > 7) { break }
               if (board[rr][nc]) { attacked = false; break }
             }
           }

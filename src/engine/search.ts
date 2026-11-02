@@ -1,7 +1,7 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
 import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial } from '../utils/moveValidation'
 import { evaluate } from './evaluation'
-import { applyEngineMove, BOARD_SIZE, cloneBoard } from '../utils/chessUtils'
+import { applyEngineMove, BOARD_SIZE, cloneBoard, generatePositionKey } from '../utils/chessUtils'
 import { pieceValues } from './evaluation'
 import { zobristHash, TTEntry } from './zobrist'
 
@@ -98,7 +98,39 @@ function historyKey(m: { from: Square, to: Square }, color: PieceColor) {
   return `${color}:${m.from}->${m.to}`
 }
 
-export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0, halfMoveClock: number = 0): { score: number, move?: { from: Square, to: Square } } {
+export interface RepetitionContext {
+  history: Record<string, number>
+  path: Map<string, number>
+}
+
+export function search(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0, halfMoveClock: number = 0, repCtx?: RepetitionContext): { score: number, move?: { from: Square, to: Square } } {
+  // 50-move rule: draw at 100 half-moves (applies at every depth incl. root)
+  if (halfMoveClock >= 100) return { score: 0 }
+  let result: { score: number, move?: { from: Square, to: Square } }
+  if (repCtx) {
+    const posKey = generatePositionKey(board, turn, rights, enPassant)
+    // Threefold repetition: draw when this position has already occurred twice.
+    // Exclude the root (ply 0) so the engine may still choose a move.
+    if (ply > 0) {
+      const seen = (repCtx.history[posKey] || 0) + (repCtx.path.get(posKey) || 0)
+      if (seen >= 2) return { score: 0 }
+    }
+    repCtx.path.set(posKey, (repCtx.path.get(posKey) || 0) + 1)
+    try {
+      result = searchNode(board, turn, rights, enPassant, depth, alpha, beta, tt, ply, halfMoveClock, repCtx)
+    } finally {
+      const remaining = (repCtx.path.get(posKey) || 1) - 1
+      if (remaining <= 0) repCtx.path.delete(posKey)
+      else repCtx.path.set(posKey, remaining)
+    }
+  } else {
+    result = searchNode(board, turn, rights, enPassant, depth, alpha, beta, tt, ply, halfMoveClock, repCtx)
+  }
+  // Normalize a negated zero (-0) to +0 so draw scores compare equal
+  return result.score === 0 ? { score: 0, move: result.move } : result
+}
+
+function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, depth: number, alpha: number, beta: number, tt?: Map<bigint, TTEntry>, ply: number = 0, halfMoveClock: number = 0, repCtx?: RepetitionContext): { score: number, move?: { from: Square, to: Square } } {
   alpha = Math.max(alpha, -INF)
   beta = Math.min(beta, INF)
   if (isInsufficientMaterial(board)) return { score: 0 }
@@ -110,7 +142,7 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
   if (!inCheck && depth >= 3) {
     const R = depth >= 5 ? 2 : 1
     const nullTurn = turn === 'white' ? 'black' : 'white'
-    const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1, halfMoveClock + 1)
+    const nullRes = search(board, nullTurn, rights, enPassant, depth - 1 - R, -beta, -beta + 1, tt, ply + 1, halfMoveClock + 1, repCtx)
     const nullScore = -nullRes.score
     if (nullScore >= beta) {
       return { score: beta }
@@ -156,15 +188,15 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
     const isPawnMove = !!(movingPiece && movingPiece.type === 'pawn')
     const nextClock = (applied.captured || isPawnMove) ? 0 : halfMoveClock + 1
     if (!first) {
-      const pvs = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -alpha - 1, -alpha, tt, ply + 1, nextClock)
+      const pvs = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -alpha - 1, -alpha, tt, ply + 1, nextClock, repCtx)
       let score = -pvs.score
       const isCapture = !!applied.captured
       if (!isCapture && depth >= 4 && i > 6) {
-        const reduced = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 3, -alpha - 1, -alpha, tt, ply + 1, nextClock)
+        const reduced = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 3, -alpha - 1, -alpha, tt, ply + 1, nextClock, repCtx)
         score = -reduced.score
       }
       if (score > alpha && score < beta) {
-        const full = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock)
+        const full = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock, repCtx)
         score = -full.score
       }
       if (score > best.score) best = { score, move: m }
@@ -176,7 +208,7 @@ export function search(board: Board, turn: PieceColor, rights: CastlingRights, e
       if (alpha >= beta) break
       continue
     }
-    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock)
+    const res = search(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, depth - 1, -beta, -alpha, tt, ply + 1, nextClock, repCtx)
     const score = -res.score
     if (score > best.score) best = { score, move: m }
     if (score > alpha) alpha = score

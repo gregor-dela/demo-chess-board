@@ -92,6 +92,21 @@ describe('[CS-009] KR vs K: evaluacijske hevristike', () => {
   })
 })
 
+describe('[CS-010] regresija: evaluacija se ne zacikli, ko je slabi kralj sosed major figure', () => {
+  test('KR vs K: weak kralj na sosednjem polju do trdnjave vrne končno oceno', () => {
+    // črn kralj e6 je v šahu od trdnjave e5 (sosednje polje) — nekoč neskončna zanka v forcedMateEndgameHeuristic
+    const board = KRK('a1', 'e5', 'e6')
+    const score = evaluate(board, 'black', 0)
+    expect(Number.isFinite(score)).toBe(true)
+  })
+
+  test('KR vs K: weak kralj sosed major figure v vseh smereh vrne končno oceno', () => {
+    for (const sq of ['d5', 'e5', 'f5', 'd6', 'f6', 'd7', 'e7', 'f7'] as const) {
+      expect(Number.isFinite(evaluate(KRK('a1', 'e6', sq), 'black', 0))).toBe(true)
+    }
+  })
+})
+
 describe('[CS-005] halfMoveClock: stagnacijski tlak v endgamu', () => {
   test('KQ vs K: visok halfMoveClock zniža oceno, ko je strong stran na potezi', () => {
     const board = KQK('e1', 'd1', 'e5')

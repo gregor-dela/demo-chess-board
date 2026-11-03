@@ -4,14 +4,15 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Popravljeno
-- izboljšaj matiranje v končnicah KQ/KR vs K
-- zaznaj remi v search() in odpravi neskončno zanko v evaluaciji
+### Izboljšano
+- CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
+- CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
+
+### Testi
+- CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 z časovnim pragom in test terminalnosti v TT
 
 ### Vzdrževanje
-- posodobi CHANGELOG za CS-010 (draw detection + fix eval loop)
-- posodobi CHANGELOG za halfMoveClock + endgame hevristike
-- sync .changelog-last-sha
+- posodobi CHANGELOG za izboljšano matiranje v končnicah
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

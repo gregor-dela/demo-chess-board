@@ -1,9 +1,13 @@
-import { describe, test, expect } from 'vitest'
-import { search } from '../search'
+import { describe, test, expect, beforeEach } from 'vitest'
+import { search, resetSearchGlobals } from '../search'
 import { BOARD_SIZE } from '../../utils/chessUtils'
 import { initialGameState } from '../../hooks/useChessGame'
 import { isStalemate, isInsufficientMaterial } from '../../utils/moveValidation'
 import type { Board, CastlingRights, Square, ChessPiece } from '../../types/chess'
+
+beforeEach(() => {
+  resetSearchGlobals()
+})
 
 describe('[CS-015] Performance: search optimizacija - Issue #8', () => {
   const state = initialGameState
@@ -67,6 +71,82 @@ describe('[CS-015] Performance: search optimizacija - Issue #8', () => {
       const res2 = search(initialBoard, turn, initialRights, state.enPassantTarget, 2, -Infinity, Infinity)
       expect(res1.move).toBeTruthy()
       expect(res2.move).toBeTruthy()
+    })
+
+    test('search globina 4 na začetni poziciji vrne potezo (regresijski časovni prag)', () => {
+      // Referenčna meritev po CS-015 #1/#2/#3: ~400 ms (izolirano).
+      // Prag 15 s ščiti pred patološko regresijo, brez flaky ustavljanja v CI.
+      const t0 = Date.now()
+      const res = search(initialBoard, turn, initialRights, state.enPassantTarget, 4, -Infinity, Infinity, new Map())
+      const dt = Date.now() - t0
+      expect(res.move).toBeTruthy()
+      expect(dt).toBeLessThan(15000)
+    }, 60000)
+  })
+
+  describe('[CS-015] Optimization #3: terminalnost v transpozicijski tabeli', () => {
+    test('ista pozicija z deljeno TT vrne identičen rezultat (mat se cachira)', () => {
+      // 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? -> Qxf7# (mat v 1)
+      const board = emptyBoard()
+      setAt(board, 'e1', { type: 'king', color: 'white', hasMoved: true })
+      setAt(board, 'h5', { type: 'queen', color: 'white', hasMoved: true })
+      setAt(board, 'c4', { type: 'bishop', color: 'white', hasMoved: true })
+      setAt(board, 'e4', { type: 'pawn', color: 'white', hasMoved: true })
+      setAt(board, 'e8', { type: 'king', color: 'black', hasMoved: true })
+      setAt(board, 'd8', { type: 'queen', color: 'black', hasMoved: true })
+      setAt(board, 'f8', { type: 'bishop', color: 'black', hasMoved: true })
+      setAt(board, 'a8', { type: 'rook', color: 'black', hasMoved: true })
+      setAt(board, 'h8', { type: 'rook', color: 'black', hasMoved: true })
+      setAt(board, 'c6', { type: 'knight', color: 'black', hasMoved: true })
+      setAt(board, 'e5', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'f6', { type: 'knight', color: 'black', hasMoved: true })
+      setAt(board, 'a7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'b7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'c7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'd7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'f7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'g7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'h7', { type: 'pawn', color: 'black', hasMoved: true })
+      const rights: CastlingRights = {
+        white: { kingSide: false, queenSide: false },
+        black: { kingSide: false, queenSide: false },
+      }
+      const tt = new Map()
+      const first = search(board, 'white', rights, null, 4, -Infinity, Infinity, tt)
+      const second = search(board, 'white', rights, null, 4, -Infinity, Infinity, tt)
+      expect(first.score).toBe(second.score)
+      expect(first.move).toEqual(second.move)
+      expect(tt.size).toBeGreaterThan(0)
+    })
+
+    test("Scholar's mate: search vrne Qxf7# (mat v 1) pri globini 4", () => {
+      const board = emptyBoard()
+      setAt(board, 'e1', { type: 'king', color: 'white', hasMoved: true })
+      setAt(board, 'h5', { type: 'queen', color: 'white', hasMoved: true })
+      setAt(board, 'c4', { type: 'bishop', color: 'white', hasMoved: true })
+      setAt(board, 'e4', { type: 'pawn', color: 'white', hasMoved: true })
+      setAt(board, 'e8', { type: 'king', color: 'black', hasMoved: true })
+      setAt(board, 'd8', { type: 'queen', color: 'black', hasMoved: true })
+      setAt(board, 'f8', { type: 'bishop', color: 'black', hasMoved: true })
+      setAt(board, 'a8', { type: 'rook', color: 'black', hasMoved: true })
+      setAt(board, 'h8', { type: 'rook', color: 'black', hasMoved: true })
+      setAt(board, 'c6', { type: 'knight', color: 'black', hasMoved: true })
+      setAt(board, 'e5', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'f6', { type: 'knight', color: 'black', hasMoved: true })
+      setAt(board, 'a7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'b7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'c7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'd7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'f7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'g7', { type: 'pawn', color: 'black', hasMoved: true })
+      setAt(board, 'h7', { type: 'pawn', color: 'black', hasMoved: true })
+      const rights: CastlingRights = {
+        white: { kingSide: false, queenSide: false },
+        black: { kingSide: false, queenSide: false },
+      }
+      const res = search(board, 'white', rights, null, 4, -Infinity, Infinity, new Map())
+      expect(res.move).toEqual({ from: 'h5', to: 'f7' })
+      expect(res.score).toBeGreaterThan(99000) // MATE - ply
     })
   })
 })

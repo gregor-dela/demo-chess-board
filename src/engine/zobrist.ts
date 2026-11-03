@@ -67,4 +67,4 @@ export function zobristHash(board: Board, player: PieceColor, rights: CastlingRi
   return h
 }
 
-export type TTEntry = { depth: number, score: number, move?: { from: Square, to: Square } }
+export type TTEntry = { depth: number, score: number, move?: { from: Square, to: Square }, terminal?: boolean }

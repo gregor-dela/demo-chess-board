@@ -99,18 +99,6 @@ export const getPawnMoves = (board: Board, square: Square, color: PieceColor, en
   return moves
 }
 
-// Pawn attack generator (for check detection): diagonals only, occupancy-agnostic
-const getPawnAttacks = (square: Square, piece: ChessPiece): Square[] => {
-  const attacks: Square[] = []
-  const [row, col] = getCoordinatesFromSquare(square)
-  const direction = piece.color === 'white' ? -1 : 1
-  const diagLeft = getSquareFromCoordinates(row + direction, col - 1)
-  const diagRight = getSquareFromCoordinates(row + direction, col + 1)
-  if (isValidSquare(diagLeft)) attacks.push(diagLeft)
-  if (isValidSquare(diagRight)) attacks.push(diagRight)
-  return attacks
-}
-
 // Sliding piece movement core (DRY for rook/bishop/queen)
 export const slidingMoves = (
   board: Board,
@@ -291,48 +279,45 @@ export const findKingPosition = (board: Board, color: PieceColor): Square | null
   return null
 }
 
-// Helper functions for attack detection (no piece validation)
-const getKnightAttacks = (board: Board, square: Square, color: PieceColor): Square[] => {
-  const moves: Square[] = []
-  const [row, col] = getCoordinatesFromSquare(square)
-  
-  // Knight moves in L-shape
-  const knightMoves = [
-    [-2, -1], [-2, 1], [-1, -2], [-1, 2],
-    [1, -2], [1, 2], [2, -1], [2, 1]
-  ]
-  
-  for (const [dRow, dCol] of knightMoves) {
-    const newSquare = getSquareFromCoordinates(row + dRow, col + dCol)
-    
-    if (isValidSquare(newSquare) && !isOwnPiece(board, newSquare, color)) {
-      moves.push(newSquare)
-    }
+// Is the straight/diagonal line from (fr,fc) to (tr,tc) free of pieces (endpoints excluded)?
+const rayClear = (board: Board, fr: number, fc: number, tr: number, tc: number): boolean => {
+  const dr = Math.sign(tr - fr)
+  const dc = Math.sign(tc - fc)
+  let r = fr + dr
+  let c = fc + dc
+  while (r !== tr || c !== tc) {
+    if (board[r][c]) return false
+    r += dr
+    c += dc
   }
-  
-  return moves
+  return true
 }
 
-const getKingAttacks = (board: Board, square: Square, color: PieceColor): Square[] => {
-  const moves: Square[] = []
-  const [row, col] = getCoordinatesFromSquare(square)
-  
-  // King moves one square in any direction
-  const directions = [
-    [-1, -1], [-1, 0], [-1, 1],
-    [0, -1],           [0, 1],
-    [1, -1],  [1, 0],  [1, 1]
-  ]
-  
-  for (const [dRow, dCol] of directions) {
-    const newSquare = getSquareFromCoordinates(row + dRow, col + dCol)
-    
-    if (isValidSquare(newSquare) && !isOwnPiece(board, newSquare, color)) {
-      moves.push(newSquare)
+// CS-015 Optimization #2: direktno (brez generiranja seznamov potez) preveri,
+// ali figura na `from` napada polje `target`. Bistveno hitreje od getValidMoves.
+const attacksSquare = (board: Board, from: Square, piece: ChessPiece, target: Square): boolean => {
+  const [fr, fc] = getCoordinatesFromSquare(from)
+  const [tr, tc] = getCoordinatesFromSquare(target)
+  const dr = tr - fr
+  const dc = tc - fc
+  switch (piece.type) {
+    case 'pawn': {
+      const dir = piece.color === 'white' ? -1 : 1
+      return dr === dir && Math.abs(dc) === 1
     }
+    case 'knight':
+      return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2)
+    case 'king':
+      return Math.max(Math.abs(dr), Math.abs(dc)) === 1
+    case 'rook':
+      return (dr === 0 || dc === 0) && rayClear(board, fr, fc, tr, tc)
+    case 'bishop':
+      return Math.abs(dr) === Math.abs(dc) && rayClear(board, fr, fc, tr, tc)
+    case 'queen':
+      return (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc)) && rayClear(board, fr, fc, tr, tc)
+    default:
+      return false
   }
-  
-  return moves
 }
 
 // Determine if a king of a given color is in check
@@ -340,37 +325,12 @@ export const isKingInCheck = (board: Board, color: PieceColor, kingSquare?: Squa
   const kingPos = kingSquare ?? findKingPosition(board, color)
   if (!kingPos) return false
 
-  // Scan opponent pieces and see if any attack the king square using pseudo-legal move generators
+  // Scan opponent pieces and see if any directly attacks the king square
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
       const piece = board[r][c]
       if (!piece || piece.color === color) continue
-      const from = getSquareFromCoordinates(r, c)
-      let attacks: Square[] = []
-      switch (piece.type) {
-        case 'pawn':
-          attacks = getPawnAttacks(from, piece)
-          break
-        case 'rook':
-          attacks = slidingMoves(board, from, piece.color, [[0, 1], [0, -1], [1, 0], [-1, 0]])
-          break
-        case 'knight':
-          attacks = getKnightAttacks(board, from, piece.color)
-          break
-        case 'bishop':
-          attacks = slidingMoves(board, from, piece.color, [[1, 1], [1, -1], [-1, 1], [-1, -1]])
-          break
-        case 'queen':
-          attacks = slidingMoves(board, from, piece.color, [
-            [0, 1], [0, -1], [1, 0], [-1, 0], // rook directions
-            [1, 1], [1, -1], [-1, 1], [-1, -1] // bishop directions
-          ])
-          break
-        case 'king':
-          attacks = getKingAttacks(board, from, piece.color)
-          break
-      }
-      if (attacks.includes(kingPos)) return true
+      if (attacksSquare(board, getSquareFromCoordinates(r, c), piece, kingPos)) return true
     }
   }
   return false

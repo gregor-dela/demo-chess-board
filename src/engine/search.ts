@@ -1,5 +1,5 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
-import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial } from '../utils/moveValidation'
+import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial, findKingPosition } from '../utils/moveValidation'
 import { evaluate, detectSimpleEndgame, pieceValues } from './evaluation'
 import { applyEngineMove, BOARD_SIZE, cloneBoard, generatePositionKey } from '../utils/chessUtils'
 import { zobristHash, TTEntry } from './zobrist'
@@ -52,24 +52,32 @@ function genCaptureMoves(board: Board, color: PieceColor, rights: CastlingRights
   return moves
 }
 
-function attackersToSquare(board: Board, square: Square, color: PieceColor, rights: CastlingRights, enPassant: Square | null): Array<{ from: Square, val: number }> {
-  const res: Array<{ from: Square, val: number }> = []
+// CS-015 Optimization #2: zgradi attack map enkrat na node in ga reuse-aj za SEE,
+// namesto ponovnega skeniranja vseh figur pri vsakem zajemu.
+function buildAttackerMap(board: Board, color: PieceColor, rights: CastlingRights, enPassant: Square | null): Map<Square, Array<{ from: Square, val: number }>> {
+  const map = new Map<Square, Array<{ from: Square, val: number }>>()
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
       if (!p || p.color !== color) continue
       const from = `${String.fromCharCode(97 + c)}${BOARD_SIZE - r}` as Square
-      const moves = getValidMoves(board, from, color, rights, enPassant)
-      if (moves.includes(square)) {
-        res.push({ from, val: pieceValues[p.type] })
+      const val = pieceValues[p.type]
+      for (const to of getValidMoves(board, from, color, rights, enPassant)) {
+        const arr = map.get(to)
+        if (arr) arr.push({ from, val })
+        else map.set(to, [{ from, val }])
       }
     }
   }
-  res.sort((a, b) => a.val - b.val)
-  return res
+  for (const arr of map.values()) arr.sort((a, b) => a.val - b.val)
+  return map
 }
 
-function seeGain(board: Board, from: Square, to: Square, turn: PieceColor, rights: CastlingRights, enPassant: Square | null): number {
+function attackersToSquare(board: Board, square: Square, color: PieceColor, rights: CastlingRights, enPassant: Square | null): Array<{ from: Square, val: number }> {
+  return buildAttackerMap(board, color, rights, enPassant).get(square) ?? []
+}
+
+function seeGain(board: Board, from: Square, to: Square, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, oppAttackerMap?: Map<Square, Array<{ from: Square, val: number }>>): number {
   const [tr, tc] = [BOARD_SIZE - parseInt(to[1]), to.charCodeAt(0) - 97]
   const captured = board[tr][tc]
   if (!captured) return 0
@@ -77,7 +85,7 @@ function seeGain(board: Board, from: Square, to: Square, turn: PieceColor, right
   const mover = board[fr][fc]!
   const base = pieceValues[captured.type] - pieceValues[mover.type]
   const opp = turn === 'white' ? 'black' : 'white'
-  const oppAttackers = attackersToSquare(board, to, opp, rights, enPassant)
+  const oppAttackers = oppAttackerMap ? (oppAttackerMap.get(to) ?? []) : attackersToSquare(board, to, opp, rights, enPassant)
   if (oppAttackers.length === 0) return base
   // subtract cheapest recapture value (approximate SEE)
   return base - oppAttackers[0].val
@@ -148,26 +156,35 @@ function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPa
     }
   }
   const key = zobristHash(board, turn, rights, enPassant)
-  if (tt && tt.has(key)) {
-    const e = tt.get(key)!
-    if (e.depth >= depth) return { score: e.score, move: e.move }
+  const ttEntry = tt?.get(key)
+  if (ttEntry) {
+    // CS-015 Optimization #3: terminalnost (mat/pat) je odvisna le od pozicije,
+    // zato jo vrnemo takoj ne glede na depth; score se izračuna iz trenutnega ply.
+    if (ttEntry.terminal) return { score: inCheck ? -(MATE - ply) : 0 }
+    if (ttEntry.depth >= depth) return { score: ttEntry.score, move: ttEntry.move }
   }
   const moves = genMoves(board, turn, rights, enPassant)
   if (moves.length === 0) {
+    if (tt) tt.set(key, { depth, score: 0, terminal: true })
     return inCheck ? { score: -(MATE - ply) } : { score: 0 }
   }
-  let pvMove: { from: Square, to: Square } | undefined
-  if (tt && tt.has(key)) {
-    const e = tt.get(key)!
-    pvMove = e.move
-  }
+  const pvMove = ttEntry?.move
+  // CS-015 Optimization #2: attack map nasprotnika zgradimo največ enkrat na node
+  const oppColor = turn === 'white' ? 'black' : 'white'
+  const oppKingSquare = findKingPosition(board, oppColor)
+  let oppAttackerMap: Map<Square, Array<{ from: Square, val: number }>> | undefined
   const ordered = moves.map(m => {
     const target = board[BOARD_SIZE - parseInt(m.to[1])][m.to.charCodeAt(0) - 97]
-    const base = target ? 1000 + seeGain(board, m.from, m.to, turn, rights, enPassant) : 0
+    let base = 0
+    if (target) {
+      if (!oppAttackerMap) oppAttackerMap = buildAttackerMap(board, oppColor, rights, enPassant)
+      base = 1000 + seeGain(board, m.from, m.to, turn, rights, enPassant, oppAttackerMap)
+    }
     const hist = history.get(historyKey(m, turn)) || 0
     const kill = (killers[depth] || []).some(k => k.from === m.from && k.to === m.to) ? 500 : 0
     const appliedBoard = applyEngineMove(board, m.from, m.to, rights, enPassant)?.board ?? cloneBoard(board)
-    const checkBonus = isKingInCheck(appliedBoard, turn === 'white' ? 'black' : 'white') ? 300 : 0
+    // Nasprotnikov kralj se med našo potezo ne premakne → uporabimo znano polje (brez skena)
+    const checkBonus = isKingInCheck(appliedBoard, oppColor, oppKingSquare) ? 300 : 0
     const pv = pvMove && pvMove.from === m.from && pvMove.to === m.to ? 2000 : 0
     const friedLiverPenalty = (turn === 'black' && m.from === 'f6' && m.to === 'd5' && isFriedLiverPattern(board)) ? -5000 : 0
     const viennaPenalty = (turn === 'black' && m.from === 'f8' && m.to === 'b4' && isViennaGambitPattern(board)) ? -1500 : 0

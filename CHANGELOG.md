@@ -9,7 +9,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
 
 ### Testi
-- CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 z časovnim pragom in test terminalnosti v TT
+- CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
 
 ### Vzdrževanje
 - posodobi CHANGELOG za izboljšano matiranje v končnicah

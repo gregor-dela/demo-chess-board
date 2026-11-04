@@ -1,7 +1,8 @@
 import { beforeEach, describe, test, expect } from 'vitest'
 import { computeBestMove, resetTranspositionTable } from '../ai'
 import { initialGameState } from '../../hooks/useChessGame'
-import { applyEngineMove, generatePositionKey, BOARD_SIZE } from '../../utils/chessUtils'
+import { applyEngineMove, generatePositionKey } from '../../utils/chessUtils'
+import { BOARD_SIZE } from '../../utils/board'
 import type { Board, Square, ChessPiece, CastlingRights, GameState } from '../../types/chess'
 
 const NO_RIGHTS: CastlingRights = {

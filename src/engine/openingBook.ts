@@ -96,7 +96,7 @@ async function ensureJsonLoaded(): Promise<void> {
     const res = await fetch('/opening-book.json')
     const data: { lines?: RawBookLine[] } = await res.json()
     jsonLines = (data.lines || []).map((l) => ({
-      moves: l.moves.map((m: string) => ({ from: m.slice(0,2), to: m.slice(2,4) })),
+      moves: l.moves.map((m: string) => ({ from: m.slice(0,2) as Square, to: m.slice(2,4) as Square })),
       side: l.side,
       style: (l.style === 'aggressive' || l.style === 'positional' || l.style === 'balanced') ? l.style : 'balanced'
     }))

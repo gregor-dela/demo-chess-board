@@ -1,6 +1,7 @@
 import React from 'react'
 import { ChessPieceProps, Square } from '../types/chess'
-import { getPieceSymbol, isValidSquare, sanitizeSquareInput } from '../utils/chessUtils'
+import { getPieceSymbol } from '../utils/chessUtils'
+import { isValidSquare, sanitizeSquareInput } from '../utils/board'
 
 const ChessPiece: React.FC<ChessPieceProps> = ({
   piece,

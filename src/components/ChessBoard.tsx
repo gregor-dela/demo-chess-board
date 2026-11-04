@@ -2,8 +2,8 @@ import React from 'react'
 import ChessSquare from './ChessSquare'
 import ErrorBoundary from './ErrorBoundary'
 import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
-import { ChessBoardProps } from '../types/chess'
-import { getSquareColor, getCoordinatesFromSquare } from '../utils/chessUtils'
+import { ChessBoardProps, Square } from '../types/chess'
+import { getSquareColor, getCoordinatesFromSquare } from '../utils/board'
 
 const ChessBoard: React.FC<ChessBoardProps> = ({
   gameState,
@@ -38,7 +38,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
             >
               {ranks.map(rank =>
                 files.map(file => {
-                  const square = `${file}${rank}`
+                  const square = `${file}${rank}` as Square
                   const [row, col] = getCoordinatesFromSquare(square)
                   const piece = gameState.board[row][col]
                   const isSelected = gameState.selectedSquare === square

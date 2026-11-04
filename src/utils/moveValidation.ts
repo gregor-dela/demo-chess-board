@@ -8,7 +8,7 @@ import {
   isOwnPiece,
   BOARD_SIZE,
   getPieceAtSquare
-} from './chessUtils'
+} from './board'
 
 // Get all valid moves for a piece at a given square
 export const getValidMoves = (board: Board, square: Square, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null): Square[] => {
@@ -295,7 +295,7 @@ const rayClear = (board: Board, fr: number, fc: number, tr: number, tc: number):
 
 // CS-015 Optimization #2: direktno (brez generiranja seznamov potez) preveri,
 // ali figura na `from` napada polje `target`. Bistveno hitreje od getValidMoves.
-const attacksSquare = (board: Board, from: Square, piece: ChessPiece, target: Square): boolean => {
+export const attacksSquare = (board: Board, from: Square, piece: ChessPiece, target: Square): boolean => {
   const [fr, fc] = getCoordinatesFromSquare(from)
   const [tr, tc] = getCoordinatesFromSquare(target)
   const dr = tr - fr

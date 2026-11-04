@@ -1,5 +1,6 @@
 import { GameState, GameAction } from '../types/chess'
-import { createInitialBoard, getPieceAtSquare, createInitialCastlingRights, generatePositionKey } from '../utils/chessUtils'
+import { createInitialBoard, createInitialCastlingRights, generatePositionKey } from '../utils/chessUtils'
+import { getPieceAtSquare } from '../utils/board'
 import { getValidMoves } from '../utils/moveValidation'
 import { applyMoveToState, undoMoveInState, redoMoveInState, createMoveFromState } from './moveStateHelpers'
 

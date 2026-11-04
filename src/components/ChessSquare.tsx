@@ -1,7 +1,7 @@
 import React from 'react'
 import ChessPieceComponent from './ChessPiece'
 import { ChessPiece, Square } from '../types/chess'
-import { isValidSquare, isValidDragData } from '../utils/chessUtils'
+import { isValidSquare, isValidDragData } from '../utils/board'
 
 interface ChessSquareProps {
   square: Square

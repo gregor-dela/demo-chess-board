@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { search, resetSearchGlobals } from '../search'
-import { BOARD_SIZE, applyEngineMove } from '../../utils/chessUtils'
+import { applyEngineMove } from '../../utils/chessUtils'
+import { BOARD_SIZE } from '../../utils/board'
 import type { Board, Square, ChessPiece, CastlingRights } from '../../types/chess'
 
 const MATE = 100000

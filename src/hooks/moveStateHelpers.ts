@@ -2,16 +2,18 @@ import { GameState, GameStatus, Move, PieceColor, PieceType, Square } from '../t
 import {
   buildMoveRecord,
   computeEnPassantTarget,
-  cloneBoard,
-  generateAlgebraicNotation,
   generatePositionKey,
-  getCoordinatesFromSquare,
-  getPieceAtSquare,
-  getSquareFromCoordinates,
   applyCastlingRookMove,
   undoCastlingRookMove,
   updateCastlingRightsForMove,
 } from '../utils/chessUtils'
+import {
+  cloneBoard,
+  getCoordinatesFromSquare,
+  getPieceAtSquare,
+  getSquareFromCoordinates,
+} from '../utils/board'
+import { generateAlgebraicNotation } from '../utils/notation'
 import { computeGameStatus, isEnPassantMove } from '../utils/moveValidation'
 
 /**

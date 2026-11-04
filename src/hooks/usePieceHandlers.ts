@@ -1,6 +1,6 @@
 import { Dispatch, useCallback } from 'react'
 import { GameAction, Square } from '../types/chess'
-import { isValidSquare } from '../utils/chessUtils'
+import { isValidSquare } from '../utils/board'
 
 /**
  * Upravlja uporabniške interakcije s figurami prek `dispatch` akcij:

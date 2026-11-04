@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { search, resetSearchGlobals } from '../search'
-import { BOARD_SIZE } from '../../utils/chessUtils'
+import { BOARD_SIZE } from '../../utils/board'
 import { initialGameState } from '../../hooks/useChessGame'
 import { isStalemate, isInsufficientMaterial } from '../../utils/moveValidation'
 import type { Board, CastlingRights, Square, ChessPiece } from '../../types/chess'

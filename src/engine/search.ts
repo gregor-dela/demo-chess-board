@@ -1,7 +1,8 @@
 import { Board, PieceColor, CastlingRights, Square, ChessPiece } from '../types/chess'
 import { getValidMoves, isKingInCheck, isEnPassantMove, isInsufficientMaterial, findKingPosition } from '../utils/moveValidation'
 import { evaluate, detectSimpleEndgame, pieceValues } from './evaluation'
-import { applyEngineMove, BOARD_SIZE, cloneBoard, generatePositionKey } from '../utils/chessUtils'
+import { applyEngineMove, generatePositionKey } from '../utils/chessUtils'
+import { cloneBoard, getCoordinatesFromSquare, getSquareFromCoordinates } from '../utils/board'
 import { zobristHash, TTEntry } from './zobrist'
 
 
@@ -24,7 +25,7 @@ function genMoves(board: Board, color: PieceColor, rights: CastlingRights, enPas
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
       if (!p || p.color !== color) continue
-      const from = `${String.fromCharCode(97 + c)}${BOARD_SIZE - r}` as Square
+      const from = getSquareFromCoordinates(r, c)
       const valids = getValidMoves(board, from, color, rights, enPassant)
       for (const to of valids) moves.push({ from, to })
     }
@@ -38,10 +39,10 @@ function genCaptureMoves(board: Board, color: PieceColor, rights: CastlingRights
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
       if (!p || p.color !== color) continue
-      const from = `${String.fromCharCode(97 + c)}${BOARD_SIZE - r}` as Square
+      const from = getSquareFromCoordinates(r, c)
       const valids = getValidMoves(board, from, color, rights, enPassant)
       for (const to of valids) {
-        const [tr, tc] = [BOARD_SIZE - parseInt(to[1]), to.charCodeAt(0) - 97]
+        const [tr, tc] = getCoordinatesFromSquare(to)
         const target = board[tr][tc]
         if ((target && target.color !== color) || (enPassant && isEnPassantMove(board, from, to, enPassant))) {
           moves.push({ from, to })
@@ -60,7 +61,7 @@ function buildAttackerMap(board: Board, color: PieceColor, rights: CastlingRight
     for (let c = 0; c < 8; c++) {
       const p = board[r][c]
       if (!p || p.color !== color) continue
-      const from = `${String.fromCharCode(97 + c)}${BOARD_SIZE - r}` as Square
+      const from = getSquareFromCoordinates(r, c)
       const val = pieceValues[p.type]
       for (const to of getValidMoves(board, from, color, rights, enPassant)) {
         const arr = map.get(to)
@@ -78,10 +79,10 @@ function attackersToSquare(board: Board, square: Square, color: PieceColor, righ
 }
 
 function seeGain(board: Board, from: Square, to: Square, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, oppAttackerMap?: Map<Square, Array<{ from: Square, val: number }>>): number {
-  const [tr, tc] = [BOARD_SIZE - parseInt(to[1]), to.charCodeAt(0) - 97]
+  const [tr, tc] = getCoordinatesFromSquare(to)
   const captured = board[tr][tc]
   if (!captured) return 0
-  const [fr, fc] = [BOARD_SIZE - parseInt(from[1]), from.charCodeAt(0) - 97]
+  const [fr, fc] = getCoordinatesFromSquare(from)
   const mover = board[fr][fc]!
   const base = pieceValues[captured.type] - pieceValues[mover.type]
   const opp = turn === 'white' ? 'black' : 'white'
@@ -174,7 +175,8 @@ function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPa
   const oppKingSquare = findKingPosition(board, oppColor)
   let oppAttackerMap: Map<Square, Array<{ from: Square, val: number }>> | undefined
   const ordered = moves.map(m => {
-    const target = board[BOARD_SIZE - parseInt(m.to[1])][m.to.charCodeAt(0) - 97]
+    const [tr, tc] = getCoordinatesFromSquare(m.to)
+    const target = board[tr][tc]
     let base = 0
     if (target) {
       if (!oppAttackerMap) oppAttackerMap = buildAttackerMap(board, oppColor, rights, enPassant)
@@ -200,7 +202,8 @@ function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPa
     const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
     if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
-    const movingPiece = board[BOARD_SIZE - parseInt(m.from[1])][m.from.charCodeAt(0) - 97]
+    const [mr, mc] = getCoordinatesFromSquare(m.from)
+    const movingPiece = board[mr][mc]
     const isPawnMove = !!(movingPiece && movingPiece.type === 'pawn')
     const nextClock = (applied.captured || isPawnMove) ? 0 : halfMoveClock + 1
     if (!first) {
@@ -256,7 +259,7 @@ export function quiescence(board: Board, turn: PieceColor, rights: CastlingRight
   return { score: alpha }
 }
 function sqToRC(sq: Square): [number, number] {
-  return [BOARD_SIZE - parseInt(sq[1]), sq.charCodeAt(0) - 97]
+  return getCoordinatesFromSquare(sq)
 }
 
 function pieceAt(board: Board, sq: Square): ChessPiece | null {

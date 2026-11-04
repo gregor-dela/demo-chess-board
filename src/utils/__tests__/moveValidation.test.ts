@@ -16,7 +16,8 @@ import {
   isInsufficientMaterial,
 } from '../moveValidation';
 import { Board, ChessPiece, PieceType, PieceColor, CastlingRights } from '../../types/chess';
-import { createInitialBoard, getSquareFromCoordinates } from '../chessUtils';
+import { createInitialBoard } from '../chessUtils';
+import { getSquareFromCoordinates } from '../board';
 
 // Helper function to create a custom board
 function createCustomBoard(pieces: Array<{ position: [number, number]; piece: ChessPiece }>): Board {

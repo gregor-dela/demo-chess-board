@@ -111,3 +111,4 @@ This file provides guidance to agents when working with code in this repository.
 
 - Pogosto delaj `git commit` po smiselnih, majhnih korakih.
 - Sporočila commitov naj bodo jasna, opisna in smiselna.
+- PR, ki zaključuje izdajo (issue), mora v telo PR-ja ali v sporočilo commita na `main` zapisati **angleško** ključno besedo za zapiranje, npr. `Closes #10`. GitHub prepozna le angleške oblike (`close(s/d)`, `fix(es/ed)`, `resolve(s/d)`), ne pa slovenskih variant (npr. „Zapira #10"), zato se izdaja ob združitvi sicer ne zapre samodejno.

@@ -27,7 +27,7 @@ export const getCoordinatesFromSquare = (square: Square): [number, number] => {
 
 // Convert [row, col] board-array coordinates to square notation
 export const getSquareFromCoordinates = (row: number, col: number): Square => {
-  return `${fileFromCol(col)}${BOARD_SIZE - row}`
+  return `${fileFromCol(col)}${BOARD_SIZE - row}` as Square
 }
 
 // Check if a square is within board bounds

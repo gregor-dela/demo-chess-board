@@ -1,7 +1,9 @@
 // Core game types
 export type PieceType = 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king';
 export type PieceColor = 'white' | 'black';
-export type Square = string; // e.g., 'e4', 'a1'
+export type File = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h';
+export type Rank = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8';
+export type Square = `${File}${Rank}`; // e.g., 'e4', 'a1'
 export type GameStatus = 'active' | 'check' | 'checkmate' | 'stalemate' | 'draw';
 export type BoardOrientation = 'whiteBottom' | 'blackBottom';
 export type GameMode = 'pvp' | 'pvai';
@@ -65,17 +67,17 @@ export interface GameState {
   enPassantTarget: Square | null; // Target square for en passant capture
   pendingPromotion: PendingPromotion | null;
   orientation: BoardOrientation;
-  halfMoveClock?: number;
-  positionCounts?: Record<string, number>;
-  mode?: GameMode;
-  aiSettings?: {
+  halfMoveClock: number;
+  positionCounts: Record<string, number>;
+  mode: GameMode;
+  aiSettings: {
     aiPlays: PieceColor;
     depth?: number;
     moveTimeMs?: number;
     autoAnalyze?: boolean;
     style?: 'aggressive' | 'positional' | 'balanced';
   };
-  aiThinking?: boolean;
+  aiThinking: boolean;
 }
 
 // Component props interfaces

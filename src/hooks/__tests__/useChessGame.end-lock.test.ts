@@ -2,6 +2,17 @@ import { renderHook, act } from '@testing-library/react'
 import { useChessGame, initialGameState } from '../useChessGame'
 import { createEmptyBoard, setPiece } from '../../test/chessTestUtils'
 
+const move = (
+  result: ReturnType<typeof renderHook<ReturnType<typeof useChessGame>>>['result'],
+  from: Parameters<typeof result.current.handleSquareClick>[0],
+  to: Parameters<typeof result.current.handlePieceDrop>[1]
+) => {
+  act(() => {
+    result.current.handleSquareClick(from)
+    result.current.handlePieceDrop(from, to)
+  })
+}
+
 function setupDrawByRepetition() {
   const board = createEmptyBoard()
   setPiece(board, 'e1', { type: 'king', color: 'white', hasMoved: false })
@@ -16,34 +27,20 @@ describe('End-of-game lock', () => {
     const init = setupDrawByRepetition()
     const { result } = renderHook(() => useChessGame(init))
 
-    act(() => {
-      // Repeat position three times to trigger draw
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-      result.current.handleSquareClick('g8')
-      result.current.handlePieceDrop('g8', 'f6')
-      result.current.handleSquareClick('f3')
-      result.current.handlePieceDrop('f3', 'g1')
-      result.current.handleSquareClick('f6')
-      result.current.handlePieceDrop('f6', 'g8')
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-      result.current.handleSquareClick('g8')
-      result.current.handlePieceDrop('g8', 'f6')
-      result.current.handleSquareClick('f3')
-      result.current.handlePieceDrop('f3', 'g1')
-      result.current.handleSquareClick('f6')
-      result.current.handlePieceDrop('f6', 'g8')
-    })
+    move(result, 'g1', 'f3')
+    move(result, 'g8', 'f6')
+    move(result, 'f3', 'g1')
+    move(result, 'f6', 'g8')
+    move(result, 'g1', 'f3')
+    move(result, 'g8', 'f6')
+    move(result, 'f3', 'g1')
+    move(result, 'f6', 'g8')
 
     const historyLen = result.current.gameState.moveHistory.length
     expect(result.current.gameState.gameStatus).toBe('draw')
 
     // Attempt another move should be ignored
-    act(() => {
-      result.current.handleSquareClick('g1')
-      result.current.handlePieceDrop('g1', 'f3')
-    })
+    move(result, 'g1', 'f3')
     expect(result.current.gameState.moveHistory.length).toBe(historyLen)
     // Still in draw
     expect(result.current.gameState.gameStatus).toBe('draw')

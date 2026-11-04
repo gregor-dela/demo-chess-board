@@ -28,7 +28,7 @@ function baseGameState(overrides: Partial<GameState> = {}): GameState {
 }
 
 describe('ChessBoard', () => {
-  it('renders rank and file labels and 64 squares', () => {
+  it('renders board stage wrappers, labels and 64 squares', () => {
     const props: ChessBoardProps = {
       gameState: baseGameState(),
       onSquareClick: () => {},
@@ -36,6 +36,9 @@ describe('ChessBoard', () => {
     }
 
     const { container } = render(<ChessBoard {...props} />)
+
+    expect(container.querySelector('.board-stage')).toBeInTheDocument()
+    expect(container.querySelector('.board-grid')).toBeInTheDocument()
 
     // Rank labels 8..1
     for (let r = 8; r >= 1; r--) {
@@ -60,10 +63,43 @@ describe('ChessBoard', () => {
 
     const { container } = render(<ChessBoard {...props} />)
 
-    const squares = Array.from(container.querySelectorAll('.chess-square')) as HTMLElement[]
-    const selected = squares.find(el => el.className.includes('chess-square-selected'))
-    const valids = squares.filter(el => el.className.includes('chess-square-valid-move'))
-    expect(selected).toBeTruthy()
-    expect(valids.length).toBeGreaterThan(0)
+    const selected = container.querySelector('[data-square="e4"]')
+    const validE5 = container.querySelector('[data-square="e5"]')
+    const validE6 = container.querySelector('[data-square="e6"]')
+
+    expect(selected).toHaveClass('chess-square-selected')
+    expect(validE5).toHaveClass('chess-square-valid-move')
+    expect(validE6).toHaveClass('chess-square-valid-move')
+  })
+
+  it('applies last move classes to both from and to squares of the latest move', () => {
+    const pawn: ChessPiece = { type: 'pawn', color: 'white', hasMoved: true }
+    const props: ChessBoardProps = {
+      gameState: baseGameState({
+        moveHistory: [
+          {
+            from: 'e2',
+            to: 'e4',
+            piece: pawn,
+            notation: 'e4',
+            timestamp: new Date('2026-08-02T12:00:00Z'),
+            prevHasMoved: false,
+            prevCastlingRights: {
+              white: { kingSide: true, queenSide: true },
+              black: { kingSide: true, queenSide: true }
+            }
+          }
+        ]
+      }),
+      onSquareClick: () => {},
+      onPieceDrop: () => {},
+    }
+
+    const { container } = render(<ChessBoard {...props} />)
+
+    const lastMoveSquares = container.querySelectorAll('.chess-square-last-move')
+    expect(lastMoveSquares).toHaveLength(2)
+    expect(container.querySelector('[data-square="e2"]')).toHaveClass('chess-square-last-move')
+    expect(container.querySelector('[data-square="e4"]')).toHaveClass('chess-square-last-move')
   })
 })

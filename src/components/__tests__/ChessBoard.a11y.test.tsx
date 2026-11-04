@@ -27,6 +27,7 @@ describe('ChessBoard a11y', () => {
 
     const board = screen.getByRole('group', { name: /chess board/i })
     expect(board).toBeInTheDocument()
+    expect(board).toHaveClass('board-grid')
 
     const cells = within(board).getAllByRole('button')
     expect(cells).toHaveLength(64)

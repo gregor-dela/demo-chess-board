@@ -11,7 +11,9 @@ import {
   isMoveLegal,
   isCheckmate,
   isStalemate,
-  hasAnyLegalMoves
+  hasAnyLegalMoves,
+  computeGameStatus,
+  isInsufficientMaterial,
 } from '../moveValidation';
 import { Board, ChessPiece, PieceType, PieceColor, CastlingRights } from '../../types/chess';
 import { createInitialBoard, getSquareFromCoordinates } from '../chessUtils';
@@ -579,6 +581,66 @@ describe('moveValidation', () => {
         { position: pos(3, 3), piece: createPiece('pawn', 'black', true) }  // d5
       ]);
       expect(hasAnyLegalMoves(board, 'white', emptyCastlingRights, 'd6')).toBe(true);
+    });
+  });
+
+  describe('insufficient material draws (FIDE dead position)', () => {
+    it('King vs King = draw (insufficient material, no legal checkmate possible)', () => {
+      const board = createCustomBoard([
+        { position: pos(7, 4), piece: createPiece('king', 'white') },
+        { position: pos(0, 4), piece: createPiece('king', 'black') },
+      ]);
+      expect(isInsufficientMaterial(board)).toBe(true);
+      expect(computeGameStatus(board, 'white', emptyCastlingRights, null)).toBe('draw');
+      expect(computeGameStatus(board, 'black', emptyCastlingRights, null)).toBe('draw');
+    });
+
+    it('King + Bishop vs King = draw', () => {
+      const board = createCustomBoard([
+        { position: pos(7, 4), piece: createPiece('king', 'white') },
+        { position: pos(7, 2), piece: createPiece('bishop', 'white') },
+        { position: pos(0, 4), piece: createPiece('king', 'black') },
+      ]);
+      expect(isInsufficientMaterial(board)).toBe(true);
+      expect(computeGameStatus(board, 'white', emptyCastlingRights, null)).toBe('draw');
+    });
+
+    it('King + Knight vs King = draw', () => {
+      const board = createCustomBoard([
+        { position: pos(7, 4), piece: createPiece('king', 'white') },
+        { position: pos(7, 1), piece: createPiece('knight', 'white') },
+        { position: pos(0, 4), piece: createPiece('king', 'black') },
+      ]);
+      expect(isInsufficientMaterial(board)).toBe(true);
+      expect(computeGameStatus(board, 'black', emptyCastlingRights, null)).toBe('draw');
+    });
+
+    it('King + Bishop vs King + Bishop (same color squares) = draw', () => {
+      // Both bishops on LIGHT squares (row+col even per getSquareColor = light)
+      const board = createCustomBoard([
+        { position: pos(7, 4), piece: createPiece('king', 'white') },
+        { position: pos(6, 2), piece: createPiece('bishop', 'white') }, // (6,2)=8 even = light
+        { position: pos(0, 4), piece: createPiece('king', 'black') },
+        { position: pos(1, 3), piece: createPiece('bishop', 'black') }, // (1,3)=4 even = light
+      ]);
+      expect(isInsufficientMaterial(board)).toBe(true);
+      expect(computeGameStatus(board, 'white', emptyCastlingRights, null)).toBe('draw');
+    });
+
+    it('King + Rook vs King = NOT a draw (Rook can mate)', () => {
+      const board = createCustomBoard([
+        { position: pos(7, 4), piece: createPiece('king', 'white') },
+        { position: pos(7, 0), piece: createPiece('rook', 'white') },
+        { position: pos(0, 4), piece: createPiece('king', 'black') },
+      ]);
+      expect(isInsufficientMaterial(board)).toBe(false);
+      expect(computeGameStatus(board, 'black', emptyCastlingRights, null)).not.toBe('draw');
+    });
+
+    it('Initial position = NOT a draw (pawns + majors can mate)', () => {
+      const board = createInitialBoard();
+      expect(isInsufficientMaterial(board)).toBe(false);
+      expect(computeGameStatus(board, 'white', emptyCastlingRights, null)).toBe('active');
     });
   });
 });

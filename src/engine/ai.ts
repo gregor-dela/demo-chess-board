@@ -1,10 +1,16 @@
 import { GameState, Square } from '../types/chess'
-import { search } from './search'
+import { search, resetSearchGlobals, type RepetitionContext } from './search'
 import { TTEntry } from './zobrist'
 import { getBookMove } from './openingBook'
 // analysis helpers removed
 
 const GLOBAL_TT: Map<bigint, TTEntry> = new Map()
+const TT_MAX_SIZE = 100000
+
+export function resetTranspositionTable(): void {
+  GLOBAL_TT.clear()
+  resetSearchGlobals()
+}
 
 export async function computeBestMove(state: GameState, depth = 3, moveTimeMs = 1000): Promise<{ from: Square, to: Square } | null> {
   const baseStart = Date.now()
@@ -22,17 +28,27 @@ export async function computeBestMove(state: GameState, depth = 3, moveTimeMs = 
   let d = 1
   const tt = GLOBAL_TT
   let lastScore = 0
+  const repCtx: RepetitionContext = { history: state.positionCounts ?? {}, path: new Map() }
   while (d <= depth && Date.now() - baseStart < budget) {
     const window = style === 'aggressive' ? 150 : style === 'positional' ? 80 : 100
     const alpha = lastScore - window
     const beta = lastScore + window
-    let res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, alpha, beta, tt)
+    let res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, alpha, beta, tt, 0, state.halfMoveClock ?? 0, repCtx)
     if (!res.move || res.score <= alpha || res.score >= beta) {
-      res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, -Infinity, Infinity, tt)
+      res = search(state.board, state.currentPlayer, state.castlingRights, state.enPassantTarget, d, -Infinity, Infinity, tt, 0, state.halfMoveClock ?? 0, repCtx)
     }
     if (res.move) best = res.move
     lastScore = res.score
     d++
+  }
+  if (tt.size > TT_MAX_SIZE) {
+    let count = 0
+    const half = Math.floor(tt.size / 2)
+    for (const k of tt.keys()) {
+      tt.delete(k)
+      count++
+      if (count >= half) break
+    }
   }
   return best
 }

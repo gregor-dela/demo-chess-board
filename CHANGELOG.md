@@ -4,13 +4,15 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dodano
-- Način igre "Človek vs AI" z gumbom za preklop in indikatorjem "AI razmišlja..."
-- AI pogon z knjigo otvoritev, ocenjevanjem pozicije, iskanjem (alfa-beta in quiescence) ter transpozicijsko tabelo
-- Preklop orientacije šahovnice (whiteBottom/blackBottom)
-- Zaznava remija: trikratna ponovitev in pravilo 50 potez (halfMoveClock/positionCounts)
-- Označevanje zadnje poteze na plošči
-- Testi za AI integracijo, orientacijo plošče in pravila remija
+### Izboljšano
+- CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
+- CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
+
+### Testi
+- CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 z časovnim pragom in test terminalnosti v TT
+
+### Vzdrževanje
+- posodobi CHANGELOG za izboljšano matiranje v končnicah
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

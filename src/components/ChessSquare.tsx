@@ -77,12 +77,13 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
     // Drag end cleanup if needed
   }
 
-  const baseClasses = 'chess-square'
-  const colorClasses = squareColor === 'light' ? 'chess-square-light' : 'chess-square-dark'
-  const selectedClasses = isSelected ? 'chess-square-selected' : ''
-  const validMoveClasses = isValidMove ? 'chess-square-valid-move' : ''
-  const hoverClasses = 'hover:brightness-110'
-  const lastMoveClasses = isLastMove ? 'ring-2 ring-yellow-400' : ''
+  const squareClasses = [
+    'chess-square',
+    squareColor === 'light' ? 'chess-square-light' : 'chess-square-dark',
+    isSelected ? 'chess-square-selected' : '',
+    isValidMove ? 'chess-square-valid-move' : '',
+    isLastMove ? 'chess-square-last-move ring-2 ring-yellow-400' : '',
+  ].filter(Boolean).join(' ')
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -105,7 +106,7 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
 
   return (
     <div
-      className={`${baseClasses} ${colorClasses} ${selectedClasses} ${validMoveClasses} ${hoverClasses} ${lastMoveClasses}`}
+      className={squareClasses}
       onClick={handleClick}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
@@ -116,6 +117,8 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
       onKeyDown={handleKeyDown}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      data-square={square}
+      data-square-color={squareColor}
     >
       {piece && (
         <ChessPieceComponent

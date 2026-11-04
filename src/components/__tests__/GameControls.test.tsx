@@ -47,32 +47,40 @@ function createMove(partial: Partial<Move>): Move {
 }
 
 describe('GameControls', () => {
-  it('renders current player and status, with Undo/Redo disabled when histories are empty', () => {
+  it('renders the new control panel hierarchy with status content and disabled Undo/Redo actions', () => {
     const onResetGame = vi.fn()
     const onUndoMove = vi.fn()
     const onRedoMove = vi.fn()
 
     render(
       <GameControls
-        gameState={baseGameState()}
+        gameState={baseGameState({ mode: 'pvp' })}
         onResetGame={onResetGame}
         onUndoMove={onUndoMove}
         onRedoMove={onRedoMove}
       />
     )
 
-    expect(screen.getByText('Current Player:')).toBeInTheDocument()
-    expect(screen.getByText('⚪ White')).toBeInTheDocument()
-    expect(screen.getByText('Status:')).toBeInTheDocument()
-    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Game status' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Match settings' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'History actions' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Move history' })).toBeInTheDocument()
 
-    const undoBtn = screen.getByRole('button', { name: /Undo Move/i }) as HTMLButtonElement
-    const redoBtn = screen.getByRole('button', { name: /Redo Move/i }) as HTMLButtonElement
+    const statusSection = screen.getByRole('heading', { name: 'Game status' }).closest('section') as HTMLElement
+    expect(within(statusSection).getByText('White to move')).toBeInTheDocument()
+    expect(within(statusSection).getByText('Game in progress.')).toBeInTheDocument()
+    expect(within(statusSection).getByRole('status')).toHaveTextContent(/active/i)
+
+    const settingsSection = screen.getByRole('heading', { name: 'Match settings' }).closest('section') as HTMLElement
+    expect(within(settingsSection).getByText('Player vs Player')).toBeInTheDocument()
+
+    const undoBtn = screen.getByRole('button', { name: /Undo move/i }) as HTMLButtonElement
+    const redoBtn = screen.getByRole('button', { name: /Redo move/i }) as HTMLButtonElement
     expect(undoBtn.disabled).toBe(true)
     expect(redoBtn.disabled).toBe(true)
   })
 
-  it('enables Undo/Redo based on moveHistory/redoHistory and shows move history SAN', () => {
+  it('enables Undo/Redo based on moveHistory/redoHistory and shows move history SAN with paths', () => {
     const onResetGame = vi.fn()
     const onUndoMove = vi.fn()
     const onRedoMove = vi.fn()
@@ -91,16 +99,31 @@ describe('GameControls', () => {
       <GameControls gameState={gs} onResetGame={onResetGame} onUndoMove={onUndoMove} onRedoMove={onRedoMove} />
     )
 
-    const undoBtn = screen.getByRole('button', { name: /Undo Move/i }) as HTMLButtonElement
-    const redoBtn = screen.getByRole('button', { name: /Redo Move/i }) as HTMLButtonElement
+    const undoBtn = screen.getByRole('button', { name: /Undo move/i }) as HTMLButtonElement
+    const redoBtn = screen.getByRole('button', { name: /Redo move/i }) as HTMLButtonElement
     expect(undoBtn.disabled).toBe(false)
     expect(redoBtn.disabled).toBe(false)
 
-    // Move History block shows SAN and from→to
-    const history = screen.getByRole('heading', { name: /Move History/i }).parentElement as HTMLElement
+    const history = screen.getByRole('heading', { name: /Move history/i }).closest('section') as HTMLElement
     expect(within(history).getByText('1.')).toBeInTheDocument()
     expect(within(history).getByText('e4')).toBeInTheDocument()
     expect(within(history).getByText('e2 → e4')).toBeInTheDocument()
+    expect(within(history).getByText('e5')).toBeInTheDocument()
+    expect(within(history).getByText('e7 → e5')).toBeInTheDocument()
+  })
+
+  it('shows the AI thinking indicator when pvai mode is active and the AI is thinking', () => {
+    render(
+      <GameControls
+        gameState={baseGameState({ mode: 'pvai', aiThinking: true })}
+        onResetGame={() => {}}
+        onUndoMove={() => {}}
+        onRedoMove={() => {}}
+      />
+    )
+
+    const statusSection = screen.getByRole('heading', { name: 'Game status' }).closest('section') as HTMLElement
+    expect(within(statusSection).getByText('AI is thinking')).toBeInTheDocument()
   })
 
   it('handles Reset flow: opens dialog, cancel does nothing; confirm calls onResetGame', () => {
@@ -117,7 +140,7 @@ describe('GameControls', () => {
       />
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Reset Game/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Reset game/i }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
 
     // Cancel
@@ -125,7 +148,7 @@ describe('GameControls', () => {
     expect(onResetGame).not.toHaveBeenCalled()
 
     // Open again and confirm (select confirm inside dialog)
-    fireEvent.click(screen.getByRole('button', { name: /Reset Game/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Reset game/i }))
     const dialog = screen.getByRole('dialog')
     const confirmBtn = within(dialog).getByRole('button', { name: /Reset Game/i })
     fireEvent.click(confirmBtn)

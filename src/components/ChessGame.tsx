@@ -26,15 +26,15 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
   } = useChessGame(initialState)
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
-      <div className="flex-shrink-0">
+    <div className="game-layout">
+      <div className="game-layout__board">
         <ChessBoard
           gameState={gameState}
           onSquareClick={handleSquareClick}
           onPieceDrop={handlePieceDrop}
         />
       </div>
-      <div className="w-full lg:w-80">
+      <div className="game-layout__panel">
         <GameControls
           gameState={gameState}
           onResetGame={resetGame}

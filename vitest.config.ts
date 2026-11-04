@@ -20,11 +20,13 @@ export default defineConfig({
         'postcss.config.js',
         'debug-*.ts'
       ],
+      // Postopno dvigovanje pragov proti DoD v1.0 (statements/lines/functions ≥95, branches ≥90).
+      // Trenutna stopnja (vmesna): 90 / 85 / 90 / 90; dvignjeno iz 80/70/80/80.
       thresholds: {
-        statements: 80,
-        lines: 80,
-        functions: 80,
-        branches: 70
+        statements: 90,
+        lines: 90,
+        functions: 90,
+        branches: 85
       }
     }
   }

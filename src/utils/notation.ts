@@ -1,6 +1,6 @@
 import { Board, ChessPiece, GameStatus, Move, PieceType, Square } from '../types/chess'
 import { BOARD_SIZE, getSquareFromCoordinates } from './board'
-import { getValidMoves } from './moveValidation'
+import { attacksSquare, isMoveLegal } from './moveValidation'
 
 export const getPieceNotationSymbol = (type: PieceType): string => {
   switch (type) {
@@ -32,6 +32,8 @@ export const isCastlingMove = (piece: ChessPiece, from: Square, to: Square): 'O-
 
 // Determine if any other same-type piece (same color) can also move to `to` (legal move),
 // requiring disambiguation in algebraic notation.
+// CS-014: namesto generiranja celotnega seznama potez najprej uporabi poceni
+// preverjanje napada (attacksSquare), šele nato potrdi legalnost s isMoveLegal.
 const getOtherCandidateFromSquares = (board: Board, piece: ChessPiece, from: Square, to: Square): Square[] => {
   const others: Square[] = []
   for (let r = 0; r < BOARD_SIZE; r++) {
@@ -42,8 +44,9 @@ const getOtherCandidateFromSquares = (board: Board, piece: ChessPiece, from: Squ
       if (p.type !== piece.type) continue
       const sq = getSquareFromCoordinates(r, c)
       if (sq === from) continue
-      const moves = getValidMoves(board, sq, p.color)
-      if (moves.includes(to)) others.push(sq)
+      if (!attacksSquare(board, sq, p, to)) continue
+      if (!isMoveLegal(board, sq, to, p.color)) continue
+      others.push(sq)
     }
   }
   return others

@@ -142,6 +142,37 @@ describe('generateAlgebraicNotation - promotion, en passant, castling, disambigu
     expect(generateAlgebraicNotation(board2, move2, 'active')).toBe('R1a2')
   })
 
+  it('[CS-014] ne razločuje, če je edini kandidat pripet (pinned)', () => {
+    const board = emptyBoard()
+    // Beli lovec na b1 (se premika) in beli lovec na b3 (pripet po diagonali c4-b3-a2).
+    const movingBishop: ChessPiece = { type: 'bishop', color: 'white', hasMoved: true }
+    const pinnedBishop: ChessPiece = { type: 'bishop', color: 'white', hasMoved: true }
+    const whiteKing: ChessPiece = { type: 'king', color: 'white', hasMoved: true }
+    const blackBishop: ChessPiece = { type: 'bishop', color: 'black', hasMoved: true }
+
+    const set = (square: string, p: ChessPiece) => {
+      const [r, c] = getCoordinatesFromSquare(square)
+      board[r][c] = p
+    }
+    set('b1', movingBishop)
+    set('b3', pinnedBishop)
+    set('a2', whiteKing)
+    set('c4', blackBishop)
+
+    const move: Move = {
+      piece: movingBishop,
+      from: 'b1',
+      to: 'c2',
+      captured: undefined,
+      prevHasMoved: false,
+      prevCastlingRights: { white: { kingSide: true, queenSide: true }, black: { kingSide: true, queenSide: true } },
+      notation: '',
+      timestamp: new Date()
+    }
+    // Brez preverjanja legalnosti bi pripeti lovec na b3 silil v "B1c2".
+    expect(generateAlgebraicNotation(board, move, 'active')).toBe('Bc2')
+  })
+
   it('formats pawn capture and promotion with capture', () => {
     const board = emptyBoard()
     // Pawn capture: e2x d3 -> 'exd3'

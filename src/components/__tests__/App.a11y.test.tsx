@@ -121,5 +121,7 @@ describe('App a11y (celotno drevo)', () => {
 
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-  })
+    // Pod instrumentacijo pokritosti ta integracijski test (18 klikov + 2 axe pregleda)
+    // preseže privzetih 5 s, zato mu dodelimo daljši časovni limit.
+  }, 20000)
 })

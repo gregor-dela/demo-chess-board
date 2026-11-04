@@ -8,7 +8,7 @@ import {
   isOwnPiece,
   BOARD_SIZE,
   getPieceAtSquare
-} from './chessUtils'
+} from './board'
 
 // Get all valid moves for a piece at a given square
 export const getValidMoves = (board: Board, square: Square, color: PieceColor, castlingRights?: CastlingRights, enPassantTarget?: Square | null): Square[] => {

@@ -3,7 +3,7 @@ import ChessSquare from './ChessSquare'
 import ErrorBoundary from './ErrorBoundary'
 import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
 import { ChessBoardProps } from '../types/chess'
-import { getSquareColor, getCoordinatesFromSquare } from '../utils/chessUtils'
+import { getSquareColor, getCoordinatesFromSquare } from '../utils/board'
 
 const ChessBoard: React.FC<ChessBoardProps> = ({
   gameState,

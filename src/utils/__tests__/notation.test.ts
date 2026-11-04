@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { BOARD_SIZE, generateAlgebraicNotation, getCoordinatesFromSquare } from '../../utils/chessUtils'
+import { BOARD_SIZE, getCoordinatesFromSquare } from '../../utils/board'
+import { generateAlgebraicNotation } from '../../utils/notation'
 import type { Board, ChessPiece, Move } from '../../types/chess'
 
 const emptyBoard = (): Board => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))

@@ -5,10 +5,10 @@ import {
   isKingMove,
   isRookMove,
   applyEngineMove,
-  cloneBoard,
   buildMoveRecord,
 } from '../chessUtils'
 import { createInitialBoard } from '../chessUtils'
+import { cloneBoard } from '../board'
 import { createEmptyBoard, setPiece } from '../../test/chessTestUtils'
 
 const makePiece = (type: 'king'|'queen'|'rook'|'bishop'|'knight'|'pawn', color: 'white'|'black', hasMoved = false) => ({ type, color, hasMoved })

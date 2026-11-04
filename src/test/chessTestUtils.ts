@@ -1,4 +1,4 @@
-import { BOARD_SIZE, getCoordinatesFromSquare } from '../utils/chessUtils'
+import { BOARD_SIZE, getCoordinatesFromSquare } from '../utils/board'
 import type { Board, ChessPiece, GameState, Square } from '../types/chess'
 
 export function createEmptyBoard(): Board {

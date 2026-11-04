@@ -1,7 +1,8 @@
 import { describe, test, expect, beforeEach } from 'vitest'
 import { search, resetSearchGlobals } from '../search'
 import type { RepetitionContext } from '../search'
-import { BOARD_SIZE, applyEngineMove, generatePositionKey } from '../../utils/chessUtils'
+import { applyEngineMove, generatePositionKey } from '../../utils/chessUtils'
+import { BOARD_SIZE } from '../../utils/board'
 import type { Board, Square, ChessPiece, CastlingRights } from '../../types/chess'
 
 beforeEach(() => {

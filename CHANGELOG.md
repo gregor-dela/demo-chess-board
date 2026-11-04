@@ -10,11 +10,13 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ### Spremenjeno
 - CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
+- #10 (SRP) – razdelitev `useChessGame.ts` (611 vrstic) na 4 specializirane hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) in pure reducer modul `gameReducer.ts`; `useChessGame` je zdaj kompozicija (71 vrstic), javni API nespremenjen
 
 ### Testi
 - CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
 - #12 (a11y): end-to-end `App.a11y.test.tsx` — jest-axe audit celotnega drevesa `<App/>` in odprtih (portal) dialogov, tipkovnični/Enter flow do šahovskih polj ter Escape in Tab+Enter za potrditveni in promocijski dialog
 - CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)
+- #10: unit testi za nove hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) — 11 novih testov
 
 ### Vzdrževanje
 - posodobi CHANGELOG za izboljšano matiranje v končnicah

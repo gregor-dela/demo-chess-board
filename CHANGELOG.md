@@ -11,7 +11,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ### Spremenjeno
 - CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
 
+### Popravljeno
+- CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
+
 ### Testi
+- CS-010: enotski testi za 50-potezno pravilo v `quiescence()` (`quiescence.test.ts`) in integracijski AI testi prek `computeBestMove` (`ai.draw.integration.test.ts`): izogib trikrat ponovljeni poziciji, izbira poteze, ki resetira 50-potezni števec, ter remi pri `halfMoveClock >= 100`
 - CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
 - #12 (a11y): end-to-end `App.a11y.test.tsx` — jest-axe audit celotnega drevesa `<App/>` in odprtih (portal) dialogov, tipkovnični/Enter flow do šahovskih polj ter Escape in Tab+Enter za potrditveni in promocijski dialog
 - CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)

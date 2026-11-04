@@ -7,8 +7,11 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ### Izboljšano
 - CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
 - CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
+- CS-014: razločevanje SAN uporablja poceni `attacksSquare` + `isMoveLegal` namesto polne generacije potez (`getValidMoves`)
 
 ### Spremenjeno
+- CS-011 – template-literal `Square` (`File`+`Rank`) in obvezna osnovna polja `GameState` (`halfMoveClock`, `positionCounts`, `mode`, `aiSettings`, `aiThinking`)
+- CS-005/CS-009 – izluščena `board.ts` (brez odvisnosti) in `notation.ts`; pretvorbe koordinat centralizirane, krožna odvisnost prekinjena
 - CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
 - #10 (SRP) – razdelitev `useChessGame.ts` (611 vrstic) na 4 specializirane hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) in pure reducer modul `gameReducer.ts`; `useChessGame` je zdaj kompozicija (71 vrstic), javni API nespremenjen
 
@@ -16,15 +19,23 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
 
 ### Testi
+- CS-014: test pripete figure — pripeti kandidat ne zahteva razločevanja SAN (`Bc2`)
+- CS-011: `tsc --noEmit` čist tipski prehod; obstoječih 250 testov nespremenjenih
 - CS-010: enotski testi za 50-potezno pravilo v `quiescence()` (`quiescence.test.ts`) in integracijski AI testi prek `computeBestMove` (`ai.draw.integration.test.ts`): izogib trikrat ponovljeni poziciji, izbira poteze, ki resetira 50-potezni števec, ter remi pri `halfMoveClock >= 100`
 - CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
 - #12 (a11y): end-to-end `App.a11y.test.tsx` — jest-axe audit celotnega drevesa `<App/>` in odprtih (portal) dialogov, tipkovnični/Enter flow do šahovskih polj ter Escape in Tab+Enter za potrditveni in promocijski dialog
 - CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)
 - #10: unit testi za nove hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) — 11 novih testov
 
+### Dokumentacija
+- označi CS-005, CS-009, CS-011, CS-014 kot rešene v `docs/CODE_SMELLS.md`
+- zabeleži pravilo angleške ključne besede `Closes #N` za samodejno zapiranje izdaj (AGENTS.md)
+
 ### Vzdrževanje
+- postopno dvigni pragove pokritosti na 90/85/90/90 (vmesni korak proti DoD v1.0)
+- podaljšaj timeout promotion integracijskega testa pod pokritostjo
 - posodobi CHANGELOG za izboljšano matiranje v končnicah
-- sinhroniziraj marker .changelog-last-sha z HEAD
+- sinhroniziraj marker `.changelog-last-sha` (#5, #10)
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

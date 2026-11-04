@@ -8,11 +8,16 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
 - CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
 
+### Spremenjeno
+- CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
+
 ### Testi
 - CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
+- CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)
 
 ### Vzdrževanje
 - posodobi CHANGELOG za izboljšano matiranje v končnicah
+- sinhroniziraj marker .changelog-last-sha z HEAD
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

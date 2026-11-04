@@ -1,7 +1,8 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react'
-import { GameState, GameAction, Square, Move, ChessPiece } from '../types/chess'
-import { createInitialBoard, getPieceAtSquare, isValidSquare, BOARD_SIZE, createInitialCastlingRights, updateCastlingRightsForMove, generateAlgebraicNotation, getCoordinatesFromSquare, computeEnPassantTarget, applyCastlingRookMove, undoCastlingRookMove, buildMoveRecord, generatePositionKey } from '../utils/chessUtils'
-import { getValidMoves, isEnPassantMove, computeGameStatus } from '../utils/moveValidation'
+import { GameState, GameAction, Square } from '../types/chess'
+import { createInitialBoard, getPieceAtSquare, isValidSquare, createInitialCastlingRights, generatePositionKey } from '../utils/chessUtils'
+import { getValidMoves } from '../utils/moveValidation'
+import { applyMoveToState, undoMoveInState, redoMoveInState, createMoveFromState } from './moveStateHelpers'
 import { computeBestMove, resetTranspositionTable } from '../engine/ai'
 
 const seedPositionCounts = (state: GameState): GameState => {
@@ -90,7 +91,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
       const { from, to } = action
       const piece = getPieceAtSquare(state.board, from)
-      
+
       if (!piece || !state.validMoves.includes(to)) {
         return state
       }
@@ -107,104 +108,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           selectedSquare: from,
         }
       }
-      
-      // Create new board with the move
-      const newBoard = state.board.map(row => [...row])
-      const [fromRow, fromCol] = [BOARD_SIZE - parseInt(from[1]), from.charCodeAt(0) - 'a'.charCodeAt(0)]
-      const [toRow, toCol] = [BOARD_SIZE - parseInt(to[1]), to.charCodeAt(0) - 'a'.charCodeAt(0)]
 
-      const capturedPiece = newBoard[toRow][toCol]
-      const movedPiecePrevHasMoved = piece.hasMoved
-      const capturedPrevHasMoved = capturedPiece ? capturedPiece.hasMoved : undefined
-
-      // Check if this is a castling move (king moves two squares horizontally)
-      const isCastling = piece.type === 'king' && Math.abs(toCol - fromCol) === 2
-      
-      // Check if this is an en passant move
-      const isEnPassant = isEnPassantMove(state.board, from, to, state.enPassantTarget)
-      let enPassantCaptureSquare: Square | undefined
-      let enPassantCapturedPiece: ChessPiece | null = null
-      
-      // Handle en passant capture
-      if (isEnPassant && state.enPassantTarget) {
-        const [enPassantRow, enPassantCol] = getCoordinatesFromSquare(state.enPassantTarget)
-        const captureRow = piece.color === 'white' ? enPassantRow + 1 : enPassantRow - 1
-        enPassantCaptureSquare = `${String.fromCharCode('a'.charCodeAt(0) + enPassantCol)}${BOARD_SIZE - captureRow}` as Square
-        enPassantCapturedPiece = newBoard[captureRow][enPassantCol]
-        newBoard[captureRow][enPassantCol] = null // Remove the captured pawn
-      }
-      
-      // Update board state
-      newBoard[toRow][toCol] = { ...piece, hasMoved: true }
-      newBoard[fromRow][fromCol] = null
-      
-// Handle castling: move the rook as well
-      if (isCastling) {
-        applyCastlingRookMove(newBoard, fromRow, fromCol, toCol)
-      }
-      
-// Determine new en passant target
-      let newEnPassantTarget: Square | null = null
-      if (piece.type === 'pawn') {
-        newEnPassantTarget = computeEnPassantTarget(fromRow, toRow, fromCol)
-      }
-
-      // Update castling rights based on this move (including captured rook handling)
-      const nextCastlingRights = updateCastlingRightsForMove(
-        state.castlingRights,
-        piece,
-        from,
-        to,
-        enPassantCapturedPiece || capturedPiece
-      )
-      
-      const mover = state.currentPlayer
-      const opponent = mover === 'white' ? 'black' : 'white'
-      const finalStatusComputed = computeGameStatus(newBoard, opponent, nextCastlingRights, newEnPassantTarget)
-      const opponentInCheck = finalStatusComputed === 'check' || finalStatusComputed === 'checkmate'
-
-      const didCapture = !!(enPassantCapturedPiece || capturedPiece)
-      const newHalfMoveClock = piece.type === 'pawn' || didCapture ? 0 : (state.halfMoveClock ?? 0) + 1
-      const key = generatePositionKey(newBoard, opponent, nextCastlingRights, newEnPassantTarget)
-      const newCounts = { ...(state.positionCounts ?? {}) }
-      newCounts[key] = (newCounts[key] ?? 0) + 1
-      const drawByRepetition = newCounts[key] >= 3
-      const drawByFifty = newHalfMoveClock >= 100
-      const finalStatus = drawByRepetition || drawByFifty ? 'draw' : finalStatusComputed
-
-// Create move record capturing previous states for undo with proper algebraic notation
-      const move: Move = buildMoveRecord({
-        from,
-        to,
-        piece,
-        captured: enPassantCapturedPiece || capturedPiece || undefined,
-        prevHasMoved: movedPiecePrevHasMoved,
-        prevCapturedHasMoved: capturedPrevHasMoved,
-        prevCastlingRights: state.castlingRights,
-        prevEnPassantTarget: state.enPassantTarget,
-        isEnPassant: isEnPassant || undefined,
-        enPassantCaptureSquare: enPassantCaptureSquare,
-        prevHalfMoveClock: state.halfMoveClock,
-        prevPositionCounts: state.positionCounts,
-      })
-      const notation = generateAlgebraicNotation(state.board, move, finalStatus)
-      move.notation = notation
-
-      return {
-        ...state,
-        board: newBoard,
-        currentPlayer: opponent,
-        moveHistory: [...state.moveHistory, move],
-        redoHistory: [], // Clear redo history when making a new move
-        selectedSquare: null,
-        validMoves: [],
-        isInCheck: opponentInCheck,
-        gameStatus: finalStatus,
-        castlingRights: nextCastlingRights,
-        enPassantTarget: newEnPassantTarget,
-        halfMoveClock: newHalfMoveClock,
-        positionCounts: newCounts
-      }
+      const move = createMoveFromState(state, from, to)
+      if (!move) return state
+      return applyMoveToState(state, move)
     }
     
     case 'REQUEST_PROMOTION': {
@@ -219,75 +126,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'COMPLETE_PROMOTION': {
       const pp = state.pendingPromotion
       if (!pp) return state
-      const promoPieceType = action.piece
-      // Execute the move with promotion
-      const newBoard = state.board.map(row => [...row])
-      const [fromRow, fromCol] = [BOARD_SIZE - parseInt(pp.from[1]), pp.from.charCodeAt(0) - 'a'.charCodeAt(0)]
-      const [toRow, toCol] = [BOARD_SIZE - parseInt(pp.to[1]), pp.to.charCodeAt(0) - 'a'.charCodeAt(0)]
-      const piece = getPieceAtSquare(state.board, pp.from)
-      if (!piece) return { ...state, pendingPromotion: null }
-
-      const capturedPiece = newBoard[toRow][toCol]
-      const movedPiecePrevHasMoved = piece.hasMoved
-      const capturedPrevHasMoved = capturedPiece ? capturedPiece.hasMoved : undefined
-
-      // Place promoted piece on destination
-      newBoard[toRow][toCol] = { type: promoPieceType, color: piece.color, hasMoved: true }
-      newBoard[fromRow][fromCol] = null
-
-      // En passant target after promotion: none
-      const nextCastlingRights = updateCastlingRightsForMove(
-        state.castlingRights,
-        { type: promoPieceType, color: piece.color, hasMoved: true },
-        pp.from,
-        pp.to,
-        capturedPiece
-      )
-
-      const mover = state.currentPlayer
-      const opponent = mover === 'white' ? 'black' : 'white'
-      const computedStatusBase = computeGameStatus(newBoard, opponent, nextCastlingRights, state.enPassantTarget)
-      const opponentInCheck = computedStatusBase === 'check' || computedStatusBase === 'checkmate'
-      const newHalfMoveClock = 0
-      const key = generatePositionKey(newBoard, opponent, nextCastlingRights, state.enPassantTarget)
-      const newCounts = { ...(state.positionCounts ?? {}) }
-      newCounts[key] = (newCounts[key] ?? 0) + 1
-      const drawByRepetition = newCounts[key] >= 3
-      const drawByFifty = newHalfMoveClock >= 100
-      const finalStatus = drawByRepetition || drawByFifty ? 'draw' : computedStatusBase
-
-      const move: Move = buildMoveRecord({
-        from: pp.from,
-        to: pp.to,
-        piece,
-        captured: capturedPiece || undefined,
-        prevHasMoved: movedPiecePrevHasMoved,
-        prevCapturedHasMoved: capturedPrevHasMoved,
-        prevCastlingRights: state.castlingRights,
-        prevEnPassantTarget: state.enPassantTarget,
-        promotion: promoPieceType,
-        prevHalfMoveClock: state.halfMoveClock,
-        prevPositionCounts: state.positionCounts,
-      })
-      const notation = generateAlgebraicNotation(state.board, move, finalStatus)
-      move.notation = notation
-
-      return {
-        ...state,
-        board: newBoard,
-        currentPlayer: opponent,
-        moveHistory: [...state.moveHistory, move],
-        redoHistory: [],
-        selectedSquare: null,
-        validMoves: [],
-        isInCheck: opponentInCheck,
-        gameStatus: finalStatus,
-        castlingRights: nextCastlingRights,
-        enPassantTarget: null,
-        halfMoveClock: newHalfMoveClock,
-        positionCounts: newCounts,
-        pendingPromotion: null,
-      }
+      const move = createMoveFromState(state, pp.from, pp.to, action.piece)
+      if (!move) return { ...state, pendingPromotion: null }
+      return { ...applyMoveToState(state, move), pendingPromotion: null }
     }
 
     case 'CANCEL_PROMOTION': {
@@ -315,146 +156,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return { ...state, aiSettings: { ...(state.aiSettings ?? { aiPlays: 'black' }), ...action.settings } }
     }
 
-    
-    
     case 'UNDO_MOVE': {
       if (state.moveHistory.length === 0) return state
-      
       const lastMove = state.moveHistory[state.moveHistory.length - 1]
-      const newBoard = state.board.map(row => [...row])
-      
-      const [fromRow, fromCol] = [BOARD_SIZE - parseInt(lastMove.from[1]), lastMove.from.charCodeAt(0) - 'a'.charCodeAt(0)]
-      const [toRow, toCol] = [BOARD_SIZE - parseInt(lastMove.to[1]), lastMove.to.charCodeAt(0) - 'a'.charCodeAt(0)]
-      
-      // Check if this was a castling move
-      const wasCastling = lastMove.piece.type === 'king' && Math.abs(toCol - fromCol) === 2
-      
-      // Restore piece to original position with previous hasMoved state
-      newBoard[fromRow][fromCol] = { ...lastMove.piece, hasMoved: lastMove.prevHasMoved }
-      
-      // Handle en passant undo
-      if (lastMove.isEnPassant && lastMove.enPassantCaptureSquare && lastMove.captured) {
-        // Clear the destination square
-        newBoard[toRow][toCol] = null
-        // Restore the captured pawn to its original position
-        const [captureRow, captureCol] = getCoordinatesFromSquare(lastMove.enPassantCaptureSquare)
-        newBoard[captureRow][captureCol] = { ...lastMove.captured, hasMoved: lastMove.prevCapturedHasMoved ?? lastMove.captured.hasMoved }
-      } else {
-        // Regular move undo: restore captured piece (if any) with its previous hasMoved state
-        if (lastMove.captured) {
-          newBoard[toRow][toCol] = { ...lastMove.captured, hasMoved: lastMove.prevCapturedHasMoved ?? lastMove.captured.hasMoved }
-        } else {
-          newBoard[toRow][toCol] = null
-        }
-      }
-      
-      // Handle castling undo: restore the rook as well
-      if (wasCastling) {
-        undoCastlingRookMove(newBoard, fromRow, fromCol, toCol)
-      }
-      
-      const nextCurrent = state.currentPlayer === 'white' ? 'black' : 'white'
-      const finalStatusBase = computeGameStatus(newBoard, nextCurrent, lastMove.prevCastlingRights, lastMove.prevEnPassantTarget || null)
-      const key = generatePositionKey(newBoard, nextCurrent, lastMove.prevCastlingRights, lastMove.prevEnPassantTarget || null)
-      const counts = lastMove.prevPositionCounts ?? {}
-      const drawByRepetition = (counts[key] ?? 0) >= 3
-      const drawByFifty = (lastMove.prevHalfMoveClock ?? 0) >= 100
-      const finalStatus = drawByRepetition || drawByFifty ? 'draw' : finalStatusBase
-      const nextInCheck = finalStatus === 'check' || finalStatus === 'checkmate'
-
-      return {
-        ...state,
-        board: newBoard,
-        currentPlayer: nextCurrent,
-        moveHistory: state.moveHistory.slice(0, -1),
-        redoHistory: [...state.redoHistory, lastMove],
-        selectedSquare: null,
-        validMoves: [],
-        isInCheck: nextInCheck,
-        gameStatus: finalStatus,
-        castlingRights: lastMove.prevCastlingRights,
-        enPassantTarget: lastMove.prevEnPassantTarget || null,
-        halfMoveClock: lastMove.prevHalfMoveClock ?? 0,
-        positionCounts: lastMove.prevPositionCounts ?? {}
-      }
+      return undoMoveInState(state, lastMove)
     }
     
     case 'REDO_MOVE': {
       if (state.redoHistory.length === 0) return state
-      
       const moveToRedo = state.redoHistory[state.redoHistory.length - 1]
-      const newBoard = state.board.map(row => [...row])
-      
-      const [fromRow, fromCol] = [BOARD_SIZE - parseInt(moveToRedo.from[1]), moveToRedo.from.charCodeAt(0) - 'a'.charCodeAt(0)]
-      const [toRow, toCol] = [BOARD_SIZE - parseInt(moveToRedo.to[1]), moveToRedo.to.charCodeAt(0) - 'a'.charCodeAt(0)]
-      
-      // Check if this is a castling move
-      const isCastling = moveToRedo.piece.type === 'king' && Math.abs(toCol - fromCol) === 2
-      
-      // Apply the move
-      newBoard[toRow][toCol] = { ...moveToRedo.piece, hasMoved: true }
-      newBoard[fromRow][fromCol] = null
-
-      // Handle promotion redo: replace piece type at destination
-      if (moveToRedo.promotion) {
-        newBoard[toRow][toCol] = { type: moveToRedo.promotion, color: moveToRedo.piece.color, hasMoved: true }
-      }
-      
-      // Handle en passant redo
-      if (moveToRedo.isEnPassant && moveToRedo.enPassantCaptureSquare) {
-        // Remove the captured pawn from its original position
-        const [captureRow, captureCol] = getCoordinatesFromSquare(moveToRedo.enPassantCaptureSquare)
-        newBoard[captureRow][captureCol] = null
-      }
-      
-      // Handle castling: move the rook as well
-      if (isCastling) {
-        applyCastlingRookMove(newBoard, fromRow, fromCol, toCol)
-      }
-      
-      // Determine en passant target for the redone move
-      let redoEnPassantTarget: Square | null = null
-      if (moveToRedo.piece.type === 'pawn') {
-        redoEnPassantTarget = computeEnPassantTarget(fromRow, toRow, fromCol)
-      }
-      
-      const mover = state.currentPlayer
-      const opponent = mover === 'white' ? 'black' : 'white'
-      const finalStatusBase = computeGameStatus(newBoard, opponent, state.castlingRights, redoEnPassantTarget)
-      const didCapture = !!moveToRedo.captured
-      const newHalfMoveClock = moveToRedo.piece.type === 'pawn' || moveToRedo.promotion || didCapture ? 0 : (state.halfMoveClock ?? 0) + 1
-      const key = generatePositionKey(newBoard, opponent, state.castlingRights, redoEnPassantTarget)
-      const newCounts = { ...(state.positionCounts ?? {}) }
-      newCounts[key] = (newCounts[key] ?? 0) + 1
-      const drawByRepetition = newCounts[key] >= 3
-      const drawByFifty = newHalfMoveClock >= 100
-      const finalStatus = drawByRepetition || drawByFifty ? 'draw' : finalStatusBase
-      const opponentInCheck = finalStatus === 'check' || finalStatus === 'checkmate'
-      
-      // Update castling rights based on the redone move
-      const nextCastlingRights = updateCastlingRightsForMove(
-        state.castlingRights,
-        moveToRedo.piece,
-        moveToRedo.from,
-        moveToRedo.to,
-        moveToRedo.captured
-      )
-      
-      return {
-        ...state,
-        board: newBoard,
-        currentPlayer: opponent,
-        moveHistory: [...state.moveHistory, moveToRedo],
-        redoHistory: state.redoHistory.slice(0, -1),
-        selectedSquare: null,
-        validMoves: [],
-        isInCheck: opponentInCheck,
-        gameStatus: finalStatus,
-        castlingRights: nextCastlingRights,
-        enPassantTarget: redoEnPassantTarget,
-        halfMoveClock: newHalfMoveClock,
-        positionCounts: newCounts
-      }
+      return redoMoveInState(state, moveToRedo)
     }
     
     case 'SET_VALID_MOVES':

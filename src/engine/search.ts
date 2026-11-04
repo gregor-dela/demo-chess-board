@@ -235,7 +235,9 @@ function searchNode(board: Board, turn: PieceColor, rights: CastlingRights, enPa
   return best
 }
 
-function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, alpha: number, beta: number, halfMoveClock: number = 0): { score: number } {
+export function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPassant: Square | null, alpha: number, beta: number, halfMoveClock: number = 0): { score: number } {
+  // 50-move rule tudi v quiescence (dosežemo jo na pol potezah, npr. iz globine 0)
+  if (halfMoveClock >= 100) return { score: 0 }
   alpha = Math.max(alpha, -INF)
   beta = Math.min(beta, INF)
   const standPat = evaluate(board, turn, halfMoveClock)
@@ -246,7 +248,8 @@ function quiescence(board: Board, turn: PieceColor, rights: CastlingRights, enPa
     const applied = applyEngineMove(board, m.from, m.to, rights, enPassant)
     if (!applied) continue
     const nextTurn = turn === 'white' ? 'black' : 'white'
-    const score = -quiescence(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, -beta, -alpha, 0).score
+    const nextClock = (applied.captured || applied.moved.type === 'pawn') ? 0 : halfMoveClock + 1
+    const score = -quiescence(applied.board, nextTurn, applied.nextRights, applied.nextEnPassant, -beta, -alpha, nextClock).score
     if (score >= beta) return { score: beta }
     if (score > alpha) alpha = score
   }

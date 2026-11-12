@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { useGameState } from '../useGameState'
 import { usePieceHandlers } from '../usePieceHandlers'
+import type { Square } from '../../types/chess'
 
 const useHarness = () => {
   const { gameState, dispatch } = useGameState()
@@ -39,6 +40,13 @@ describe('usePieceHandlers', () => {
     expect(result.current.gameState.selectedSquare).toBeNull()
 
     act(() => result.current.handlePieceDrop('e2', 'e2'))
+    expect(result.current.gameState.moveHistory).toHaveLength(0)
+
+    // Neveljavno izvorno in ciljno polje (napačna oblika) -> zgodnji izhod
+    act(() => result.current.handlePieceDrop('z9' as Square, 'e4'))
+    expect(result.current.gameState.moveHistory).toHaveLength(0)
+
+    act(() => result.current.handlePieceDrop('e2', 'z9' as Square))
     expect(result.current.gameState.moveHistory).toHaveLength(0)
 
     spy.mockRestore()

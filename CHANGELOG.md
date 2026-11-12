@@ -26,13 +26,19 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - #12 (a11y): end-to-end `App.a11y.test.tsx` — jest-axe audit celotnega drevesa `<App/>` in odprtih (portal) dialogov, tipkovnični/Enter flow do šahovskih polj ter Escape in Tab+Enter za potrditveni in promocijski dialog
 - CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)
 - #10: unit testi za nove hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) — 11 novih testov
+- CS-013: testi za AI nastavitve v `GameControls` — vse oznake težavnosti (depth 1–6, privzeti `?? 3`), oznake stila igre (balanced/aggressive/positional), veja `aiPlays === 'white'` ter posredovanje `onSetAiSettings` prek vseh treh izbirnih polj
+- CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
 
 ### Dokumentacija
 - označi CS-005, CS-009, CS-011, CS-014 kot rešene v `docs/CODE_SMELLS.md`
+- označi preostale smell-e (CS-001–CS-004, CS-006–CS-008, CS-010, CS-012, CS-013, CS-015, CS-016) kot rešene v `docs/CODE_SMELLS.md` z navedenimi testi
+- sinhroniziraj `docs/MILESTONES.md`: MVP milestone 100 %, v1.0 odraža dokončan tehnični dolg in preostale UX/QA postavke
 - zabeleži pravilo angleške ključne besede `Closes #N` za samodejno zapiranje izdaj (AGENTS.md)
 
 ### Vzdrževanje
 - postopno dvigni pragove pokritosti na 90/85/90/90 (vmesni korak proti DoD v1.0)
+- dvigni pragove pokritosti na raven DoD v1.0 (statements/lines/functions ≥95, branches ≥90)
+- omeji merjenje pokritosti na izvorno kodo (`src/**`), izključi tipe, teste in konfiguracijske skripte
 - podaljšaj timeout promotion integracijskega testa pod pokritostjo
 - posodobi CHANGELOG za izboljšano matiranje v končnicah
 - sinhroniziraj marker `.changelog-last-sha` (#5, #10)

@@ -155,4 +155,99 @@ describe('GameControls', () => {
 
     expect(onResetGame).toHaveBeenCalledTimes(1)
   })
+
+  it('prikazuje in posodablja AI nastavitve (težavnost, stil, stran)', () => {
+    const onSetAiSettings = vi.fn()
+    const commonProps = {
+      onResetGame: () => {},
+      onUndoMove: () => {},
+      onRedoMove: () => {},
+      onSetAiSettings,
+    }
+
+    const { rerender } = render(
+      <GameControls
+        gameState={baseGameState({
+          mode: 'pvai',
+          aiSettings: { aiPlays: 'black', depth: 1, style: 'balanced' },
+        })}
+        {...commonProps}
+      />
+    )
+
+    // Pokrij vse veje difficultyLabel (1..6)
+    const difficultyCases: Array<[number | undefined, string]> = [
+      [1, 'Easy'],
+      [2, 'Easy-Medium'],
+      [3, 'Medium'],
+      [4, 'Medium-Hard'],
+      [5, 'Hard'],
+      [6, 'Master'],
+    ]
+    for (const [depth, label] of difficultyCases) {
+      rerender(
+        <GameControls
+          gameState={baseGameState({
+            mode: 'pvai',
+            aiSettings: { aiPlays: 'black', depth, style: 'balanced' },
+          })}
+          {...commonProps}
+        />
+      )
+      expect(screen.getByText(`Difficulty: ${label}`)).toBeInTheDocument()
+    }
+
+    // depth undefined -> privzeti `?? 3`
+    rerender(
+      <GameControls
+        gameState={baseGameState({
+          mode: 'pvai',
+          aiSettings: { aiPlays: 'black', style: 'balanced' },
+        })}
+        {...commonProps}
+      />
+    )
+    expect(screen.getByText('Difficulty: Medium')).toBeInTheDocument()
+
+    // Pokrij vse veje styleLabel
+    const styleCases: Array<['aggressive' | 'positional' | 'balanced', string]> = [
+      ['aggressive', 'Aggressive'],
+      ['positional', 'Positional'],
+      ['balanced', 'Balanced'],
+    ]
+    for (const [style, label] of styleCases) {
+      rerender(
+        <GameControls
+          gameState={baseGameState({
+            mode: 'pvai',
+            aiSettings: { aiPlays: 'black', depth: 3, style },
+          })}
+          {...commonProps}
+        />
+      )
+      expect(screen.getByText(`Play style: ${label}`)).toBeInTheDocument()
+    }
+
+    // aiPlays === 'white' veja
+    rerender(
+      <GameControls
+        gameState={baseGameState({
+          mode: 'pvai',
+          aiSettings: { aiPlays: 'white', depth: 3, style: 'balanced' },
+        })}
+        {...commonProps}
+      />
+    )
+    expect(screen.getByText('AI plays as: White')).toBeInTheDocument()
+
+    // onChange handlerji posredujejo spremembe
+    fireEvent.change(screen.getByLabelText('AI Difficulty'), { target: { value: '5' } })
+    expect(onSetAiSettings).toHaveBeenCalledWith({ depth: 5 })
+
+    fireEvent.change(screen.getByLabelText('AI Play Style'), { target: { value: 'aggressive' } })
+    expect(onSetAiSettings).toHaveBeenCalledWith({ style: 'aggressive' })
+
+    fireEvent.change(screen.getByLabelText('AI Side'), { target: { value: 'white' } })
+    expect(onSetAiSettings).toHaveBeenCalledWith({ aiPlays: 'white' })
+  })
 })

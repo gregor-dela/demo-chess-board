@@ -1,5 +1,5 @@
 # Roadmap & Milestones - demo-chess-board
-_V zadnji posodobitvi: 2026-09-23_
+_V zadnji posodobitvi: 2026-11-12_
 
 Ta dokument predlaga **milestone** (končne točke) za projekt in kaj je v vsaki vključeno.
 Milestone-e lahko ročno ustvariš na GitHubu pod zavihkom `Issues` → `Milestones`.
@@ -21,14 +21,22 @@ _Vsebuje predhodne opravke: CODE_SMELLS (popravki), UX izboljšave, refactor eng
 - **Cilj**: Vsi testi zeleni, coverage >90%, AI deluje brez crashov.
 - **Issue-i ki pripadajo tu**:
   - [x] CS-001/CS-007 Unified `applyEngineMove` (search+quiescence+openingBook)
+  - [x] CS-002 Opening book uporablja `applyEngineMove` (castling/en passant/promocija)
   - [x] CS-003 Stale AI cancellation (version token)
+  - [x] CS-004 `seedPositionCounts` (začetna pozicija v trikratnem ponavljanju)
+  - [x] CS-005/CS-009 Enosmerni graf odvisnosti + centralizirane pretvorbe (`board.ts`)
+  - [x] CS-006 Skupni pomočniki za apply/undo/redo (`moveStateHelpers.ts`)
   - [x] CS-008 Reset TT ob reset/mode toggle + TT size cap
+  - [x] CS-010 Draw pravila tudi v engine (50-move + ponavljanje)
+  - [x] CS-011 Template-literal `Square` + obvezna osnovna polja `GameState`
   - [x] CS-012 Optional → required callbacks (GameControlsProps)
   - [x] CS-013 Mrtva SET_EN_PASSANT_TARGET action → remove
+  - [x] CS-014 Poceni razločevanje SAN (`attacksSquare` + `isMoveLegal`)
+  - [x] CS-015 Terminalna stanja v search le pri praznem `genMoves()`
   - [x] CS-016 buildMoveRecord timestamp → optional (determinizem)
   - [x] UX: Ctrl/Cmd Z/Y undo/redo bližnjice
   - [x] UX: AI Difficulty/Style/Side selects v GameControls (PVAI mode)
-  - [x] Testi: 170/170 zeleno, coverage 95/88/95/95 %
+  - [x] Testi: 251/251 zeleno, coverage 97.37/90.41/97.26/97.37 %
 - **Progress**: 100% ✅
 
 ---
@@ -40,30 +48,30 @@ _Vsebuje predhodne opravke: CODE_SMELLS (popravki), UX izboljšave, refactor eng
 - **Opis**: Aplikacija je "production quality". Poln pokritost testi, robusten AI (zmage v endgamu ne izgubi), UI polish, pristna a11y audit.
 - **Vključi**:
   - **Engine**:
-    - [ ] CS-009: Premakni časovni budžet iterative deepening iz `search.ts` → `ai.ts` (SRP)
-    - [ ] Endgame tablebase za KQ vs K, KR vs K (AI nikoli ne bo izgubil preprostih zmag)
-    - [ ] Null-move pruning + Late Move Reduction tuning (večja globina v manjšem času)
-    - [ ] SEE (Static Exchange Evaluation) robustness za vsako figuro
+    - [x] CS-009: časovni budžet iterative deepening je v `ai.ts` (`computeBestMove`, SRP)
+    - [~] Endgame tablebase za KQ vs K, KR vs K — delno: mop-up + `forcedMateEndgameHeuristic`, pokrito z `mate.endgame.test.ts` (prava tablebase ostaja odprta)
+    - [x] Null-move pruning + Late Move Reduction (`search.ts` — null-move z izklopom v končnicah, redukcija kasnejših potez)
+    - [x] SEE (Static Exchange Evaluation) robustness (`seeGain` + `buildAttackerMap`)
   - **Refactor / arhi**:
-    - [ ] CS-005: Reduciraj kognitivno kompleksnost reduktorja (useChessGame) - razdeli v podreducerje
-    - [ ] CS-006: Razdeli useChessGame.ts (>600 vrstic) v manje hooke (npr. useAIManager, useUndoRedo, useHotkeys)
-    - [ ] Izbriši odvečne guard-klauze (naredi DRY helperje za legalnost potez)
+    - [x] CS-005: kognitivna kompleksnost reduktorja (razdeljeno na `gameReducer` + `moveStateHelpers`)
+    - [x] CS-006: razdelitev `useChessGame.ts` (→ `useAIManager`, `useUndoRedo`, `useGameState`, `usePieceHandlers`; 71 vrstic)
+    - [x] DRY helperji za legalnost potez (`applyEngineMove`, `isMoveLegal`, `attacksSquare`)
   - **UX / UI polish**:
-    - [ ] Grafična zgodovina potez (predogled poteze ko hover namesto samo SAN texta)
-    - [ ] Indikator "AI je zamislil premik?" - loading spinner z napredkom (depth + score PV line)
-    - [ ] Šahovnice za figure (Unicode standardizirana, podpora za ligature) + option za SVG/PNG figure
-    - [ ] Board theming (dropdown izbira light/dark barv šahovnice + figure)
+    - [ ] Grafična zgodovina potez (#13: predogled poteze ob hoveru)
+    - [ ] Indikator "AI razmišlja" z napredkom (#14: depth + score PV line)
+    - [ ] Šahovnice za figure (Unicode ligature) + option za SVG/PNG figure
+    - [ ] Board theming (#11: izbira light/dark barv šahovnice)
   - **A11y & QA**:
-    - [ ] jest-axe audit celotnega <App/> drevesa (add test in popravi vse probleme)
+    - [x] jest-axe audit celotnega <App/> drevesa (`App.a11y.test.tsx`)
     - [ ] Manual screen reader test (VoiceOver/NVDA) - preveri check/checkmate announcement
-    - [ ] 98% coverage threshold + 100% za engine/moveValidation
-    - [ ] Smoke test za vse kombinacije modes (pvp, pvai-bel, pvai-crn)
+    - [x] Coverage pragovi dvignjeni na DoD (95/90/95/95), dejansko 97.37/90.41/97.26/97.37 %
+    - [~] Smoke test za kombinacije modov — delno pokrito z integracijskimi a11y testi
 - **Obljubljivosti (DoD)**:
-  - `npm run build` → 0 warningov
-  - `npm run test:coverage` → Statements ≥95%, Functions ≥95%, Lines ≥95%, Branches ≥90%
-  - `npm run lint` → 0
-  - Ročno preverjeno v Chrome/Safari/Firefox + mobilni Safari (iOS + Android)
-- **Progress**: 0%
+  - [x] `npm run build` → 0 warningov
+  - [x] `npm run test:coverage` → Statements ≥95%, Functions ≥95%, Lines ≥95%, Branches ≥90%
+  - [x] `npm run lint` → 0
+  - [ ] Ročno preverjeno v Chrome/Safari/Firefox + mobilni Safari (iOS + Android)
+- **Progress**: ~75% (tehnični dolg zaključen; ostajajo UX/UI polish in ročni QA)
 
 ### Milestone: **"v1.1 - Multiplayer Online"**
 - **Rok**: 2026-10-30 (primerno)

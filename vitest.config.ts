@@ -13,20 +13,23 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       reportsDirectory: './coverage',
+      // Meri le izvorno kodo aplikacije; konfiguracijske skripte in tipe izključi.
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/main.tsx',
         'src/App.tsx',
-        'tailwind.config.js',
-        'postcss.config.js',
-        'debug-*.ts'
+        'src/types/**',
+        'src/test/**',
+        'src/**/__tests__/**',
+        'src/**/*.test.{ts,tsx}'
       ],
-      // Postopno dvigovanje pragov proti DoD v1.0 (statements/lines/functions ≥95, branches ≥90).
-      // Trenutna stopnja (vmesna): 90 / 85 / 90 / 90; dvignjeno iz 80/70/80/80.
+      // Pragovi na ravni DoD v1.0 (statements/lines/functions ≥95, branches ≥90).
+      // Dvig iz vmesne stopnje 90/85/90/90 na ciljne vrednosti.
       thresholds: {
-        statements: 90,
-        lines: 90,
-        functions: 90,
-        branches: 85
+        statements: 95,
+        lines: 95,
+        functions: 95,
+        branches: 90
       }
     }
   }

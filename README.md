@@ -7,7 +7,7 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
 ## Features
 
 - **Complete Chess Implementation**: All standard chess pieces with proper movement rules
-- **Drag & Drop Interface**: Intuitive piece movement using mouse drag and drop; touch-friendly tap-to-select and tap-to-move
+- **Drag & Drop Interface**: Intuitive piece movement using mouse drag and drop with immediately responsive selection (a mouse press on your piece selects it and reveals its legal moves right away); touch-friendly tap-to-select and tap-to-move
 - **Keyboard-Only Play**: Navigate squares with Tab/Shift+Tab; press Enter/Space to select a piece and to confirm a move
 - **Accessible UI**: Chess board announced to assistive tech (board role=group; squares role=button with accessible names like "e2 white pawn"); live game status announcements via role=status; focus-visible outlines and disabled states
 - **Move Validation**: Comprehensive validation for all piece types, with illegal moves filtered so your king is never left in check:
@@ -25,7 +25,7 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
   - Valid move indicators
   - Last move highlights
   - Move preview: hovering or focusing a row in the move history highlights that move's from/to squares on the board
-  - Chess board with alternating square colors
+  - Chess board with alternating square colors, with five selectable color themes (Classic, Emerald, Ocean, Amethyst, Slate)
 - **Game Controls**:
   - Prominent Reset button with confirmation dialog
   - Undo move support (even after game end)
@@ -33,6 +33,7 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
   - Mode toggle (Human vs Human or Human vs AI) with AI thinking indicator and live search progress (depth, eval, PV line, elapsed time)
   - Move history rows are focusable buttons; hover or keyboard focus previews the move on the board
   - Board orientation toggle (flip board)
+  - Board theme picker (light/dark square colors; the chosen theme is kept when resetting the game)
 - **Game State Management**: Turn-based gameplay with proper state tracking
 - **Responsive Design**: Clean, modern UI that works on different screen sizes
 

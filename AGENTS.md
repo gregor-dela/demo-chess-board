@@ -51,17 +51,18 @@ This file provides guidance to agents when working with code in this repository.
 - App composition (top-level flow)
   - src/main.tsx mounts <App />; App renders <ChessGame /> as the main container
   - ChessGame composes:
-    - ChessBoard: renders the 8x8 board grid with rank/file labels; supports board orientation; highlights selection, valid moves, last move, and the previewed move (from/to squares of the history row under hover/focus); exposes role=group and squares as role=button with accessible names; supports keyboard (Enter/Space) and touch tap-to-move
-    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator with live search progress card (depth, eval in cp, PV line in SAN, elapsed time), and move history in SAN as focusable rows that preview the move on hover/focus (onPreviewMove); provides Reset (with confirmation), Undo, Redo, orientation toggle, and mode toggle
+    - ChessBoard: renders the 8x8 board grid with rank/file labels; supports board orientation; highlights selection, valid moves, last move, and the previewed move (from/to squares of the history row under hover/focus); exposes role=group and squares as role=button with accessible names; applies the selected board theme via CSS variables (--board-light/--board-dark) and a data-board-theme attribute; selects a piece immediately on a left mouse press (pointerdown) for chess.com-like responsiveness; supports keyboard (Enter/Space) and touch tap-to-move
+    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator with live search progress card (depth, eval in cp, PV line in SAN, elapsed time), and move history in SAN as focusable rows that preview the move on hover/focus (onPreviewMove); provides Reset (with confirmation), Undo, Redo, orientation toggle, mode toggle, and a board-theme picker (onSetBoardTheme)
     - ConfirmationDialog: reusable modal for reset confirmation with keyboard accessibility
     - PromotionDialog: accessible modal for pawn promotion selection (Queen/Rook/Bishop/Knight) with focus trap, keyboard navigation, and Escape to cancel
     - ErrorBoundary: wraps the board grid to handle rendering errors gracefully
 - State management and game logic
   - src/hooks/useChessGame.ts encapsulates all game state using useReducer
-    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress, previewMove
-    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS, SET_PREVIEW_MOVE
+    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress, previewMove, boardTheme
+    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS, SET_PREVIEW_MOVE, SET_BOARD_THEME
     - Workflow: clicks or drops dispatch actions; reducer updates board and history, toggles player; promotion handled via pendingPromotion flow
     - Move preview: SET_PREVIEW_MOVE sets previewMove (from/to); cleared on MAKE_MOVE/COMPLETE_PROMOTION/UNDO_MOVE/REDO_MOVE/RESET_GAME so it never lags behind history
+    - Board theme: SET_BOARD_THEME sets boardTheme; RESET_GAME keeps the chosen theme ({ ...initialGameState, boardTheme: state.boardTheme }) so the user preference survives a new game
     - Tracks castling rights and en passant target based on king/rook/pawn moves
     - Automatically detects and sets checkmate/stalemate/check status after each move and undo/redo
     - Draw detection: threefold repetition + 50-move rule via positionCounts and halfMoveClock
@@ -82,6 +83,9 @@ This file provides guidance to agents when working with code in this repository.
     - Input validation: isValidDragData(), sanitizeSquareInput() for robust drag-and-drop
     - Move record + repetition helpers: buildMoveRecord(), generatePositionKey()
     - generateAlgebraicNotation(): creates Standard Algebraic Notation for moves with disambiguation, captures, check/checkmate indicators
+  - src/utils/boardThemes.ts
+    - BOARD_THEMES: five board palettes (classic, emerald, ocean, amethyst, slate) with light/dark colors
+    - getBoardThemePalette(id): returns the palette for a theme id, falling back to DEFAULT_BOARD_THEME (classic) for unknown ids
 - Move validation and endgame detection
   - src/utils/moveValidation.ts
     - getValidMoves(board, square, piece, castlingRights): delegates to piece-specific generators and filters illegal moves
@@ -93,12 +97,13 @@ This file provides guidance to agents when working with code in this repository.
     - computeGameStatus() returns active/check/checkmate/stalemate based on position
     - En passant implemented
 - Interaction boundaries and DnD
-  - ChessPiece sets dataTransfer with a sanitized square on dragstart; visual feedback via Tailwind classes
-  - ChessSquare handles click selection and onDrop (from → to) and forwards to useChessGame handlers; supports touch via tap-to-select and tap-to-move; keyboard via Enter/Space/Escape; validates drag data
-  - ChessBoard computes square color and pulls piece data from gameState.board; highlights last move
+  - ChessPiece sets dataTransfer with a sanitized square on dragstart, uses setDragImage for a sharp drag preview and effectAllowed = 'move'; visual feedback via Tailwind classes
+  - ChessSquare handles click selection, onPointerDown (immediate selection of the current player's piece on a left mouse press), and onDrop (from → to) and forwards to useChessGame handlers; supports touch via tap-to-select and tap-to-move; keyboard via Enter/Space/Escape; validates drag data
+  - ChessBoard computes square color and pulls piece data from gameState.board; highlights last move; converts the selected boardTheme into the --board-light/--board-dark CSS variables and a data-board-theme attribute
   - ErrorBoundary wraps the board grid to handle rendering errors gracefully
 - Styling
   - Tailwind utilities via src/index.css (@layer components) define chess-square and chess-piece classes
+  - Board square colors use the CSS variables --board-light/--board-dark (with fallbacks) so the theme can change without a Tailwind rebuild; pressed pieces scale instantly (.chess-square:active .chess-piece)
   - tailwind.config.js defines custom colors: chess-light, chess-dark, highlight-blue, valid-move
 
 ## Notes

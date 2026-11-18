@@ -7,6 +7,8 @@ export type Square = `${File}${Rank}`; // e.g., 'e4', 'a1'
 export type GameStatus = 'active' | 'check' | 'checkmate' | 'stalemate' | 'draw';
 export type BoardOrientation = 'whiteBottom' | 'blackBottom';
 export type GameMode = 'pvp' | 'pvai';
+// Barvna tema šahovnice (issue #11).
+export type BoardTheme = 'classic' | 'emerald' | 'ocean' | 'amethyst' | 'slate';
 
 // Piece interface
 export interface ChessPiece {
@@ -106,6 +108,8 @@ export interface GameState {
   aiProgress: AiProgress | null;
   // Poteza, ki se trenutno predogleduje (hover/fokus v zgodovini); null, ko ni predogleda.
   previewMove: MovePreview | null;
+  // Izbrana barvna tema šahovnice (issue #11).
+  boardTheme: BoardTheme;
 }
 
 // Component props interfaces
@@ -133,6 +137,7 @@ export interface GameControlsProps {
   onToggleMode: () => void;
   onSetAiSettings: (settings: Partial<NonNullable<GameState['aiSettings']>>) => void;
   onPreviewMove: (move: MovePreview | null) => void;
+  onSetBoardTheme: (theme: BoardTheme) => void;
 }
 
 
@@ -165,6 +170,7 @@ export type GameAction =
   | { type: 'SET_AI_THINKING'; value: boolean }
   | { type: 'SET_AI_PROGRESS'; progress: AiProgress | null }
   | { type: 'SET_PREVIEW_MOVE'; move: MovePreview | null }
+  | { type: 'SET_BOARD_THEME'; theme: BoardTheme }
   | { type: 'TOGGLE_ORIENTATION' }
   | { type: 'TOGGLE_MODE' }
   | { type: 'SET_AI_SETTINGS'; settings: Partial<NonNullable<GameState['aiSettings']>> };

@@ -2,6 +2,7 @@ import { GameState, GameAction } from '../types/chess'
 import { createInitialBoard, createInitialCastlingRights, generatePositionKey } from '../utils/chessUtils'
 import { getPieceAtSquare } from '../utils/board'
 import { getValidMoves } from '../utils/moveValidation'
+import { DEFAULT_BOARD_THEME } from '../utils/boardThemes'
 import { applyMoveToState, undoMoveInState, redoMoveInState, createMoveFromState } from './moveStateHelpers'
 
 /** Zaseje začetno pozicijo v `positionCounts`, da trikratno ponavljanje šteje tudi prvo pozicijo. */
@@ -47,7 +48,8 @@ export const initialGameState: GameState = seedPositionCounts({
   aiSettings: { aiPlays: 'black', depth: 3, moveTimeMs: 1200, autoAnalyze: false, style: 'balanced' },
   aiThinking: false,
   aiProgress: null,
-  previewMove: null
+  previewMove: null,
+  boardTheme: DEFAULT_BOARD_THEME
 })
 
 // Game state reducer
@@ -145,7 +147,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     }
 
     case 'RESET_GAME':
-      return initialGameState
+      // Nova igra obdrži izbrano barvno temo plošče (uporabniška nastavitev).
+      return { ...initialGameState, boardTheme: state.boardTheme }
 
     case 'TOGGLE_ORIENTATION': {
       const next = state.orientation === 'whiteBottom' ? 'blackBottom' : 'whiteBottom'
@@ -199,6 +202,11 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       return {
         ...state,
         previewMove: action.move
+      }
+    case 'SET_BOARD_THEME':
+      return {
+        ...state,
+        boardTheme: action.theme
       }
 
     default:

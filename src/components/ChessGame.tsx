@@ -24,6 +24,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
     toggleMode,
     setAiSettings,
     setPreviewMove,
+    setBoardTheme,
   } = useChessGame(initialState)
 
   return (
@@ -45,6 +46,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
           onToggleMode={toggleMode}
           onSetAiSettings={setAiSettings}
           onPreviewMove={setPreviewMove}
+          onSetBoardTheme={setBoardTheme}
         />
       </div>
 

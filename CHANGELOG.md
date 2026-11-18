@@ -5,6 +5,9 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Izboljšano
+- #11: barvna tema šahovnice — nov modul `boardThemes.ts` ponuja pet palet (Classic, Emerald, Ocean, Amethyst, Slate); barvi polj se nastavita prek CSS spremenljivk `--board-light`/`--board-dark` na `.board-grid`, uporabnik pa ju izbere z izbirnikom "Board theme" v `GameControls` (akcija `SET_BOARD_THEME`)
+- #11: izbrana tema se ohrani ob resetu igre (`RESET_GAME` vrne privzeto stanje z isto `boardTheme`); neznana tema varno pade nazaj na Classic
+- hitrejše vlečenje figur: ob pritisku z levim gumbom miške na figuro trenutnega igralca se ta takoj izbere (akcija `SELECT_SQUARE` prek `onPointerDown`), veljavne poteze pa so označene še pred sprožitvijo nativnega vlečenja; `:active` povečava figure brez prehoda in oster drag feedback (`setDragImage`, `effectAllowed = 'move'`), da se občutek približa chess.com
 - #13: grafična zgodovina potez — vrstice zgodovine v `GameControls` so interaktivni gumbi; ob hoveru ali fokusu se izvorno in ciljno polje poteze označita na plošči (`.chess-square-preview-move`), ob izgubi fokusa/hoverja pa oznaka izgine
 - #13: `previewMove` (`MovePreview`) v stanju igre in akcija `SET_PREVIEW_MOVE` prek `useChessGame.setPreviewMove`; predogled se samodejno počisti ob vsaki spremembi zgodovine (`MAKE_MOVE`, `COMPLETE_PROMOTION`, `UNDO_MOVE`, `REDO_MOVE`, `RESET_GAME`), da ne zaostaja za dejanskim stanjem
 - #14: kartica napredka iskanja AI v `GameControls` (PVAI) — prikaz globine (`X / Y`), ocene v centipawnih z vidika belih, PV linije v SAN in pretečenega časa/proračuna; kartica se prikaže med razmišljanjem in skrije ob koncu
@@ -25,6 +28,10 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
 
 ### Testi
+- #11: testi palet in padca na privzeto temo (`boardThemes.test.ts`, 6 testov)
+- #11: testi reducerja za `SET_BOARD_THEME` in ohranitev teme ob resetu (`gameReducer.boardTheme.test.ts`, 6 testov)
+- #11: testi `ChessBoard` za atribut `data-board-theme` in vrednosti CSS spremenljivk ter `GameControls` za izbirnik teme (`ChessBoard.boardTheme.test.tsx`, `GameControls.boardTheme.test.tsx`, 8 testov)
+- hitrejše vlečenje: testi takojšnje izbire ob pritisku z miško (izbere figuro trenutnega igralca; ignorira prazno/tuje polje, dotik in desni gumb) in integracijski test oznake veljavnih potez prek `<ChessGame/>` (`PointerSelection.test.tsx`, 6 testov)
 - #13: testi reducerja za `SET_PREVIEW_MOVE` in čiščenje predogleda ob potezi/undo/redo/reset (`gameReducer.previewMove.test.ts`, 7 testov)
 - #13: testi `ChessBoard` za označitev polj predogleda, odsotnost oznak brez predogleda, delovanje pri `blackBottom` in kotni potezi (`ChessBoard.previewMove.test.tsx`, 4 testi)
 - #13: testi `GameControls` za hover/izstop, fokus/blur, ločen predogled po vrsticah, dostopna imena vrstic in odsotnost vrstic brez potez (`GameControls.previewMove.test.tsx`, 5 testov)
@@ -44,6 +51,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
 
 ### Dokumentacija
+- označi #11 (board theming) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: `boardTheme` v `GameState`, modul `boardThemes.ts`, CSS spremenljivki teme na plošči in takojšnja izbira ob pritisku; `README.md`: izbira teme plošče in odzivnejše vlečenje; `AGENTS.md`: povzetek teme in hitrejšega vlečenja
 - označi #13 (grafična zgodovina potez) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
 - osveži `docs/ARCHITECTURE.md`: `previewMove` v `GameState`, gumbi zgodovine in oznaka predogleda na plošči; `README.md`: funkcija predogleda poteze ob hoveru/fokusu
 - označi #14 (AI loading UI) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0

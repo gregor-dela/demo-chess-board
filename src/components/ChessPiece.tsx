@@ -17,6 +17,13 @@ const ChessPiece: React.FC<ChessPieceProps> = ({
         e.preventDefault()
         return
       }
+      // Osveži drag feedback: drsna slika je kar figura sama (ostra, brez
+      // zamegljenega privzetega duha), dovoljeno dejanje pa je "move".
+      e.dataTransfer.effectAllowed = 'move'
+      const el = e.currentTarget as HTMLElement
+      if (typeof e.dataTransfer.setDragImage === 'function') {
+        e.dataTransfer.setDragImage(el, el.offsetWidth / 2 || 0, el.offsetHeight / 2 || 0)
+      }
       e.dataTransfer.setData('text/plain', sanitized)
       onDragStart(sanitized as Square)
     } catch (err) {

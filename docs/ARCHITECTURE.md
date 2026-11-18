@@ -15,9 +15,10 @@
 ## Model podatkov
 - `Board`: mreža 8×8 z `ChessPiece | null` (`src/types/chess.ts:41`).
 - `ChessPiece`: `type`, `color`, `hasMoved` (`src/types/chess.ts:8`).
-- `GameState`: trenutni igralec, zgodovina potez, redo, status igre, izbrano polje, veljavne poteze, šah indikator, pravice rokiranja, en passant cilj, promocija, `previewMove` (predogled poteze iz zgodovine) (`src/types/chess.ts:50`).
+- `GameState`: trenutni igralec, zgodovina potez, redo, status igre, izbrano polje, veljavne poteze, šah indikator, pravice rokiranja, en passant cilj, promocija, `previewMove` (predogled poteze iz zgodovine) in `boardTheme` (izbrana barvna tema plošče) (`src/types/chess.ts:50`).
 - `Move`: polno beleženje stanj za Undo/Redo (vključno z prejšnjimi pravicami rokiranja, en passant) (`src/types/chess.ts:20`).
 - `orientation`: orientacija plošče (`whiteBottom` | `blackBottom`) za 180° rotacijo prikaza (`src/types/chess.ts:50`).
+- `boardTheme`: barvna tema plošče (`classic` | `emerald` | `ocean` | `amethyst` | `slate`); palete in padec na privzeto so v `src/utils/boardThemes.ts` (issue #11).
 - `halfMoveClock`: števec polpotez brez premika kmeta ali zajema; ob 100 polpotezah remi.
 - `positionCounts`: števec ponovitev pozicij, ključ generiran z `generatePositionKey`.
  - `mode`: način igre (`pvp` | `pvai`).
@@ -35,6 +36,7 @@
  - Blokada potez po koncu: guardi v `SELECT_SQUARE` in `MAKE_MOVE` preprečijo nadaljnje poteze, ko `gameStatus` ni `active` ali `check` (`src/hooks/useChessGame.ts:28`, `src/hooks/useChessGame.ts:55`).
  - AI integracija: asinhroni generator `computeBestMoveProgress` prek `useEffect` ko je na potezi AI; vsak yield (dokončana globina) se objavi kot `SET_AI_PROGRESS` za UI, na koncu pa `MAKE_MOVE`; akcije `TOGGLE_MODE` in `SET_AI_SETTINGS`.
  - Predogled poteze (#13): `SET_PREVIEW_MOVE` nastavi `previewMove` (izvorno/ciljno polje iz zgodovine); ob vsaki spremembi zgodovine (`MAKE_MOVE`, `COMPLETE_PROMOTION`, `UNDO_MOVE`, `REDO_MOVE`, `RESET_GAME`) se predogled počisti, da ne zaostaja za dejanskim stanjem (`src/hooks/gameReducer.ts`).
+ - Barvna tema plošče (#11): `SET_BOARD_THEME` nastavi `boardTheme`; `RESET_GAME` obdrži izbrano temo (`{ ...initialGameState, boardTheme: state.boardTheme }`), da uporabniška nastavitev preživi novo igro (`src/hooks/gameReducer.ts`).
 
 ## Logika potez
 - Generator veljavnih potez `getValidMoves` delegira na posamezne tipe figur in filtrira poteze, ki puščajo kralja v šahu (`src/utils/moveValidation.ts:13`, `src/utils/moveValidation.ts:45`).
@@ -50,10 +52,10 @@
 
 ## UI arhitektura
 - `ChessGame`: orkestracija stanja in povezava med ploščo, kontrolami ter dialogi (`src/components/ChessGame.tsx:13`).
-- `ChessBoard`: izris plošče, oznake vrstic/datotek, integracija `ErrorBoundary` (`src/components/ChessBoard.tsx:29`).
-- `ChessSquare`: interakcije (klik, tipkovnica, DnD, touch), validacija vnosa, oznaka predogleda poteze (`.chess-square-preview-move`) (`src/components/ChessSquare.tsx:31`).
+- `ChessBoard`: izris plošče, oznake vrstic/datotek, integracija `ErrorBoundary`; izbrano temo prevede v barvi in ju izpostavi kot CSS spremenljivki `--board-light`/`--board-dark` na `.board-grid` (skupaj z atributom `data-board-theme`) ter posreduje takojšnjo izbiro ob pritisku (`onPointerDown`) (`src/components/ChessBoard.tsx:29`).
+- `ChessSquare`: interakcije (klik, `onPointerDown` za takojšnjo izbiro, tipkovnica, DnD, touch), validacija vnosa, oznaka predogleda poteze (`.chess-square-preview-move`) (`src/components/ChessSquare.tsx:31`).
 - `ChessPiece`: DnD vir, sanitizacija, unicode simbol (`src/components/ChessPiece.tsx:11`).
-- `GameControls`: status igre, gumbi Reset/Undo/Redo, prikaz zgodovine potez (vrstice kot gumbi; hover/fokus sproži `onPreviewMove`), AI nastavitve in kartica napredka iskanja AI (globina, eval, PV, čas) (`src/components/GameControls.tsx:22`).
+- `GameControls`: status igre, gumbi Reset/Undo/Redo, prikaz zgodovine potez (vrstice kot gumbi; hover/fokus sproži `onPreviewMove`), izbirnik barvne teme plošče (`onSetBoardTheme`), AI nastavitve in kartica napredka iskanja AI (globina, eval, PV, čas) (`src/components/GameControls.tsx:22`).
 - Gumb za preklop orientacije (`src/components/GameControls.tsx:61`) sproži `TOGGLE_ORIENTATION`; `ChessBoard` izriše datoteke/range v odvisnosti od orientacije (`src/components/ChessBoard.tsx:8`).
 - `PromotionDialog` in `ConfirmationDialog`: dostopna dialoga, fokusna past, tipkovnična navigacija (`src/components/PromotionDialog.tsx:43`, `src/components/ConfirmationDialog.tsx:50`).
 

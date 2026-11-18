@@ -22,6 +22,7 @@ export function baseGameState(overrides: Partial<GameState> = {}): GameState {
     enPassantTarget: null,
     orientation: 'whiteBottom',
     previewMove: null,
+    boardTheme: 'classic',
     ...overrides,
   }
 }

@@ -60,7 +60,7 @@ _Vsebuje predhodne opravke: CODE_SMELLS (popravki), UX izboljšave, refactor eng
     - [x] Grafična zgodovina potez (#13: predogled poteze ob hoveru/fokusu vrstice zgodovine)
     - [x] Indikator "AI razmišlja" z napredkom (#14: globina X/Y, eval v cp, PV linija v SAN, pretečeni čas/proračun)
     - [ ] Šahovnice za figure (Unicode ligature) + option za SVG/PNG figure
-    - [ ] Board theming (#11: izbira light/dark barv šahovnice)
+    - [x] Board theming (#11: izbira light/dark barv šahovnice — 5 palet prek `boardThemes.ts`, izbirnik "Board theme" v `GameControls`)
   - **A11y & QA**:
     - [x] jest-axe audit celotnega <App/> drevesa (`App.a11y.test.tsx`)
     - [ ] Manual screen reader test (VoiceOver/NVDA) - preveri check/checkmate announcement
@@ -71,7 +71,7 @@ _Vsebuje predhodne opravke: CODE_SMELLS (popravki), UX izboljšave, refactor eng
   - [x] `npm run test:coverage` → Statements ≥95%, Functions ≥95%, Lines ≥95%, Branches ≥90%
   - [x] `npm run lint` → 0
   - [ ] Ročno preverjeno v Chrome/Safari/Firefox + mobilni Safari (iOS + Android)
-- **Progress**: ~85% (tehnični dolg in grafična zgodovina potez zaključena; ostajajo preostale UX/UI polish postavke in ročni QA)
+- **Progress**: ~90% (tehnični dolg, grafična zgodovina potez in board theming zaključeni; ostajajo figuralni set, preostale UX/UI polish postavke in ročni QA)
 
 ### Milestone: **"v1.1 - Multiplayer Online"**
 - **Rok**: 2026-10-30 (primerno)

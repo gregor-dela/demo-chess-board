@@ -11,6 +11,7 @@ interface ChessSquareProps {
   squareColor: 'light' | 'dark'
   onSquareClick: (square: Square) => void
   onPieceDrop: (from: Square, to: Square) => void
+  onSquarePointerDown?: (square: Square, e: React.PointerEvent) => void
   currentSelected: Square | null
   isLastMove?: boolean
   isPreviewMove?: boolean
@@ -24,12 +25,17 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   squareColor,
   onSquareClick,
   onPieceDrop,
+  onSquarePointerDown,
   currentSelected,
   isLastMove,
   isPreviewMove
 }) => {
   const handleClick = () => {
     onSquareClick(square)
+  }
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    onSquarePointerDown?.(square, e)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -111,6 +117,7 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
     <div
       className={squareClasses}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       role="button"

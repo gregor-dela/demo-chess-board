@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { GameState, MovePreview } from '../types/chess'
+import { BoardTheme, GameState, MovePreview } from '../types/chess'
 import { resetTranspositionTable } from '../engine/ai'
 import { initialGameState } from './gameReducer'
 import { useGameState } from './useGameState'
@@ -56,6 +56,10 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
     dispatch({ type: 'SET_PREVIEW_MOVE', move })
   }, [dispatch])
 
+  const setBoardTheme = useCallback((theme: BoardTheme) => {
+    dispatch({ type: 'SET_BOARD_THEME', theme })
+  }, [dispatch])
+
   return {
     gameState,
     handleSquareClick,
@@ -71,6 +75,7 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
     toggleMode,
     setAiSettings,
     setPreviewMove,
+    setBoardTheme,
     requestAiMove,
   }
 }

@@ -24,6 +24,7 @@ function baseGameState(overrides: Partial<GameState> = {}): GameState {
     },
     enPassantTarget: null,
     orientation: 'whiteBottom',
+    boardTheme: 'classic',
     ...overrides,
   }
 }

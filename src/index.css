@@ -186,11 +186,11 @@
   }
 
   .chess-square-light {
-    @apply bg-[#d8c3a5];
+    background-color: var(--board-light, #d8c3a5);
   }
 
   .chess-square-dark {
-    @apply bg-[#5d4037];
+    background-color: var(--board-dark, #5d4037);
   }
 
   .chess-square-last-move {
@@ -215,6 +215,14 @@
 
   .chess-piece {
     @apply relative z-[2] text-4xl select-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-110;
+  }
+
+  /* Takojšen odziv ob pritisku (issue: hitrejše vlečenje): figura se takoj poveča,
+     brez zakasnitve prehoda, da se občutek približa chess.com. */
+  .chess-square:active .chess-piece {
+    transform: scale(1.15);
+    transition: none;
+    cursor: grabbing;
   }
 
   .chess-piece--white {

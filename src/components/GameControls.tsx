@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { GameControlsProps } from '../types/chess'
+import { BoardTheme, GameControlsProps } from '../types/chess'
 import ConfirmationDialog from './ConfirmationDialog'
 import { formatPrincipalVariation } from '../utils/notation'
+import { BOARD_THEMES, getBoardThemePalette } from '../utils/boardThemes'
 
 function getStatusCopy(gameState: GameControlsProps['gameState']) {
   const playerToMove = gameState.currentPlayer === 'white' ? 'White to move' : 'Black to move'
@@ -56,6 +57,7 @@ const GameControls: React.FC<GameControlsProps> = ({
   onToggleMode,
   onSetAiSettings,
   onPreviewMove,
+  onSetBoardTheme,
 }) => {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const statusCopy = getStatusCopy(gameState)
@@ -171,6 +173,25 @@ const GameControls: React.FC<GameControlsProps> = ({
           >
             Flip board
           </button>
+        </div>
+
+        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <label htmlFor="board-theme" className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Board theme: {getBoardThemePalette(gameState.boardTheme).label}
+          </label>
+          <select
+            id="board-theme"
+            aria-label="Board theme"
+            value={gameState.boardTheme}
+            onChange={(e) => onSetBoardTheme(e.target.value as BoardTheme)}
+            className="w-full rounded-xl border border-white/10 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          >
+            {BOARD_THEMES.map((theme) => (
+              <option key={theme.id} value={theme.id}>
+                {theme.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {gameState.mode === 'pvai' && aiSettings && (

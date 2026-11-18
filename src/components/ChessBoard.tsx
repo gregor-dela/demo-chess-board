@@ -4,6 +4,7 @@ import ErrorBoundary from './ErrorBoundary'
 import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
 import { ChessBoardProps, Square } from '../types/chess'
 import { getSquareColor, getCoordinatesFromSquare } from '../utils/board'
+import { getBoardThemePalette } from '../utils/boardThemes'
 
 const ChessBoard: React.FC<ChessBoardProps> = ({
   gameState,
@@ -13,6 +14,19 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
   const isWhiteBottom = gameState.orientation === 'whiteBottom'
   const files = isWhiteBottom ? ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] : ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
   const ranks = isWhiteBottom ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]
+  const themePalette = getBoardThemePalette(gameState.boardTheme)
+
+  // Takojšnja izbira (issue: hitrejše vlečenje): ob pritisku z miško se figura
+  // izbere in prikažejo se veljavne poteze, še preden se sproži nativni drag —
+  // tako se odzivnost približa chess.com.
+  const handleSquarePointerDown = (square: Square, e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    const [row, col] = getCoordinatesFromSquare(square)
+    const piece = gameState.board[row][col]
+    if (piece && piece.color === gameState.currentPlayer) {
+      onSquareClick(square)
+    }
+  }
 
   return (
     <div className="board-stage">
@@ -35,6 +49,11 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
               className="board-grid"
               role="group"
               aria-label="Chess board"
+              data-board-theme={themePalette.id}
+              style={{
+                '--board-light': themePalette.light,
+                '--board-dark': themePalette.dark,
+              } as React.CSSProperties}
             >
               {ranks.map(rank =>
                 files.map(file => {
@@ -59,6 +78,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                       squareColor={squareColor}
                       onSquareClick={onSquareClick}
                       onPieceDrop={onPieceDrop}
+                      onSquarePointerDown={handleSquarePointerDown}
                       currentSelected={gameState.selectedSquare}
                       isLastMove={isLastMove}
                       isPreviewMove={isPreviewMove}

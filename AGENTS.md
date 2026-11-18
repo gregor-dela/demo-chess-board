@@ -52,14 +52,14 @@ This file provides guidance to agents when working with code in this repository.
   - src/main.tsx mounts <App />; App renders <ChessGame /> as the main container
   - ChessGame composes:
     - ChessBoard: renders the 8x8 board grid with rank/file labels; supports board orientation; highlights selection, valid moves, and last move; exposes role=group and squares as role=button with accessible names; supports keyboard (Enter/Space) and touch tap-to-move
-    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator, and move history in SAN; provides Reset (with confirmation), Undo, Redo, orientation toggle, and mode toggle
+    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator with live search progress card (depth, eval in cp, PV line in SAN, elapsed time), and move history in SAN; provides Reset (with confirmation), Undo, Redo, orientation toggle, and mode toggle
     - ConfirmationDialog: reusable modal for reset confirmation with keyboard accessibility
     - PromotionDialog: accessible modal for pawn promotion selection (Queen/Rook/Bishop/Knight) with focus trap, keyboard navigation, and Escape to cancel
     - ErrorBoundary: wraps the board grid to handle rendering errors gracefully
 - State management and game logic
   - src/hooks/useChessGame.ts encapsulates all game state using useReducer
-    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking
-    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING
+    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress
+    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS
     - Workflow: clicks or drops dispatch actions; reducer updates board and history, toggles player; promotion handled via pendingPromotion flow
     - Tracks castling rights and en passant target based on king/rook/pawn moves
     - Automatically detects and sets checkmate/stalemate/check status after each move and undo/redo

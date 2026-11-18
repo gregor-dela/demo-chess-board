@@ -1,10 +1,11 @@
 import { Dispatch, useCallback, useEffect, useRef } from 'react'
-import { GameAction, GameState } from '../types/chess'
-import { computeBestMove } from '../engine/ai'
+import { GameAction, GameState, Square } from '../types/chess'
+import { computeBestMoveProgress } from '../engine/ai'
 
 /**
  * Upravlja življenjski cikel AI poteze:
  * - samodejno zahteva potezo, ko je v pvai načinu na potezi AI
+ * - med iskanjem sproti objavlja napredek (`SET_AI_PROGRESS`) za UI (issue #14)
  * - `aiVersionRef` (prek `bumpAiVersion`) prepreči izvajanje zastarelih potez
  *   po Undo/Redo/Reset/spremembi nastavitev
  */
@@ -25,7 +26,17 @@ export const useAIManager = (gameState: GameState, dispatch: Dispatch<GameAction
     aiBusyRef.current = true
     dispatch({ type: 'SET_AI_THINKING', value: true })
     try {
-      const best = await computeBestMove(gameState, gameState.aiSettings?.depth ?? 3, gameState.aiSettings?.moveTimeMs ?? 1000)
+      let best: { from: Square; to: Square } | null = null
+      const progressStream = computeBestMoveProgress(
+        gameState,
+        gameState.aiSettings?.depth ?? 3,
+        gameState.aiSettings?.moveTimeMs ?? 1000
+      )
+      for await (const progress of progressStream) {
+        if (aiVersionRef.current !== versionAtRequest) return
+        dispatch({ type: 'SET_AI_PROGRESS', progress })
+        best = progress.bestMove
+      }
       if (aiVersionRef.current !== versionAtRequest) {
         return
       }

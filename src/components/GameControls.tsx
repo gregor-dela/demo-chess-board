@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { GameControlsProps } from '../types/chess'
 import ConfirmationDialog from './ConfirmationDialog'
+import { formatPrincipalVariation } from '../utils/notation'
 
 function getStatusCopy(gameState: GameControlsProps['gameState']) {
   const playerToMove = gameState.currentPlayer === 'white' ? 'White to move' : 'Black to move'
@@ -82,6 +83,27 @@ const GameControls: React.FC<GameControlsProps> = ({
     return 'Balanced'
   }
 
+  // Ocena v centipawnih -> znak + dve decimalki (npr. +0.42, -1.05, 0.00).
+  const formatEvalCp = (cp: number): string => {
+    if (cp === 0) return '0.00'
+    const value = (cp / 100).toFixed(2)
+    return cp > 0 ? `+${value}` : value
+  }
+
+  const formatSeconds = (ms: number): string => `${(ms / 1000).toFixed(1)}s`
+
+  const aiProgress = gameState.aiProgress
+  const pvLine = aiProgress && aiProgress.source === 'search'
+    ? formatPrincipalVariation(
+        aiProgress.pv,
+        gameState.board,
+        gameState.currentPlayer,
+        gameState.castlingRights,
+        gameState.enPassantTarget,
+        Math.floor(gameState.moveHistory.length / 2) + 1
+      )
+    : ''
+
   return (
     <div className="control-panel">
       <section className="control-card control-card--status" aria-labelledby="game-status-title">
@@ -102,6 +124,31 @@ const GameControls: React.FC<GameControlsProps> = ({
           <p>{statusCopy.description}</p>
         </div>
       </section>
+
+      {gameState.mode === 'pvai' && gameState.aiThinking && aiProgress && (
+        <section className="control-card control-card--thinking" aria-labelledby="ai-progress-title">
+          <p className="control-card__eyebrow">Engine telemetry</p>
+          <h2 id="ai-progress-title" className="control-section-title">AI is thinking…</h2>
+          <div role="status" aria-live="polite" aria-atomic="true" data-testid="ai-progress">
+            {aiProgress.source === 'book' ? (
+              <p className="control-card__title">
+                Opening book{aiProgress.pv[0] ? `: ${aiProgress.pv[0].from} → ${aiProgress.pv[0].to}` : ''}
+              </p>
+            ) : (
+              <>
+                <p className="control-card__title">
+                  Search depth: {aiProgress.depth} / {aiProgress.maxDepth}
+                </p>
+                <p>Eval: {formatEvalCp(aiProgress.scoreCp)}</p>
+                <p>PV line: {pvLine || '—'}</p>
+              </>
+            )}
+            <p>
+              Elapsed: {formatSeconds(aiProgress.elapsedMs)} (timeout: {formatSeconds(aiProgress.timeBudgetMs)})
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="control-card" aria-labelledby="match-settings-title">
         <p className="control-card__eyebrow">Session setup</p>

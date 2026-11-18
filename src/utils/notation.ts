@@ -1,6 +1,7 @@
-import { Board, ChessPiece, GameStatus, Move, PieceType, Square } from '../types/chess'
-import { BOARD_SIZE, getSquareFromCoordinates } from './board'
+import { Board, CastlingRights, ChessPiece, GameStatus, Move, PieceColor, PieceType, Square } from '../types/chess'
+import { BOARD_SIZE, getPieceAtSquare, getSquareFromCoordinates } from './board'
 import { attacksSquare, isMoveLegal } from './moveValidation'
+import { applyEngineMove, buildMoveRecord } from './chessUtils'
 
 export const getPieceNotationSymbol = (type: PieceType): string => {
   switch (type) {
@@ -107,4 +108,68 @@ export const generateAlgebraicNotation = (
   const base = `${pieceSymbol}${disamb}${captureMark}${to}`
   const suffix = resultStatus === 'checkmate' ? '#' : resultStatus === 'check' ? '+' : ''
   return base + suffix
+}
+
+/**
+ * Pretvori principal variation (zaporedje koordinatnih potez) v človeško berljiv
+ * SAN zapis z oštevilčenimi potezami (npr. `1. e4 e5 2. Nf3 Nc6`). Poteze se
+ * odigrajo na klonirani plošči, tako da so zajeti disambiguacija, zajemi,
+ * rokada, en passant in promocija. Ob neveljavni potezi se obdelava ustavi.
+ *
+ * `startFullMoveNumber` določa številko prve poteze (polna poteza = poteza belih).
+ */
+export const formatPrincipalVariation = (
+  pv: Array<{ from: Square; to: Square }>,
+  board: Board,
+  startingPlayer: PieceColor,
+  castlingRights: CastlingRights,
+  enPassantTarget: Square | null,
+  startFullMoveNumber = 1
+): string => {
+  if (pv.length === 0) return ''
+
+  const tokens: string[] = []
+  let currentBoard = board
+  let rights = castlingRights
+  let ep = enPassantTarget
+  let player = startingPlayer
+  let moveNumber = startFullMoveNumber
+
+  // Kadar je prva poteza na potezi črnega, označi nadaljevanje z "N...".
+  if (player === 'black') tokens.push(`${moveNumber}...`)
+
+  for (const { from, to } of pv) {
+    const piece = getPieceAtSquare(currentBoard, from)
+    if (!piece) break
+
+    const applied = applyEngineMove(currentBoard, from, to, rights, ep, { applyPromotion: true })
+    if (!applied) break
+
+    const move = buildMoveRecord({
+      from,
+      to,
+      piece,
+      captured: applied.captured,
+      prevHasMoved: piece.hasMoved,
+      prevCastlingRights: rights,
+      prevEnPassantTarget: ep,
+      isEnPassant: applied.isEnPassant,
+      promotion: applied.promotedTo,
+    })
+    const san = generateAlgebraicNotation(currentBoard, move)
+
+    if (player === 'white') {
+      tokens.push(`${moveNumber}.`, san)
+      moveNumber++
+    } else {
+      tokens.push(san)
+    }
+
+    currentBoard = applied.board
+    rights = applied.nextRights
+    ep = applied.nextEnPassant
+    player = player === 'white' ? 'black' : 'white'
+  }
+
+  return tokens.join(' ')
 }

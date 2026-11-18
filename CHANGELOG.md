@@ -5,6 +5,10 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Izboljšano
+- #14: kartica napredka iskanja AI v `GameControls` (PVAI) — prikaz globine (`X / Y`), ocene v centipawnih z vidika belih, PV linije v SAN in pretečenega časa/proračuna; kartica se prikaže med razmišljanjem in skrije ob koncu
+- #14: `computeBestMoveProgress` — async generator z iterativnim poglabljanjem, ki po vsaki dokončani globini objavi napredek (`AiProgress`); `computeBestMove` ostaja tanek sinhroni ovoj (porabi generator in vrne končno potezo)
+- #14: PV se rekonstruira iz transpozicijske tabele (`extractPrincipalVariation` v `search.ts`), brez dodatnega iskanja
+- #14: `formatPrincipalVariation` pretvori koordinatno PV v oštevilčen SAN zapis (upošteva zajeme, rokado, promocijo in disambiguacijo)
 - CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
 - CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
 - CS-014: razločevanje SAN uporablja poceni `attacksSquare` + `isMoveLegal` namesto polne generacije potez (`getValidMoves`)
@@ -19,6 +23,10 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
 
 ### Testi
+- #14: testi za generator napredka (`ai.progress.test.ts`) — en zapis na globino, pretvorba ocene na vidik belih, veja otvoritvene knjižnice, remi pri `halfMoveClock ≥ 100`, časovni proračun (faza igre, šah, stil)
+- #14: testi reducerja za `SET_AI_PROGRESS` in čiščenje napredka ob `SET_AI_THINKING(false)` (`gameReducer.aiProgress.test.ts`)
+- #14: testi `useAIManager` z mockanim generatorjem — objava napredka ob vsakem yieldu, izvedba poteze na koncu, prekinitev ob zastareli verziji (`useAIManager.progress.test.ts`)
+- #14: testi kartice v `GameControls` (prikaz/skritje, otvoritvena poteza, oblikovanje ocene) in `formatPrincipalVariation` (oštevilčenje, zajem, rokada, promocija)
 - CS-014: test pripete figure — pripeti kandidat ne zahteva razločevanja SAN (`Bc2`)
 - CS-011: `tsc --noEmit` čist tipski prehod; obstoječih 250 testov nespremenjenih
 - CS-010: enotski testi za 50-potezno pravilo v `quiescence()` (`quiescence.test.ts`) in integracijski AI testi prek `computeBestMove` (`ai.draw.integration.test.ts`): izogib trikrat ponovljeni poziciji, izbira poteze, ki resetira 50-potezni števec, ter remi pri `halfMoveClock >= 100`
@@ -30,6 +38,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
 
 ### Dokumentacija
+- označi #14 (AI loading UI) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: generator napredka AI, rekonstrukcija PV iz TT, `formatPrincipalVariation` in kartica napredka v `GameControls`
 - označi CS-005, CS-009, CS-011, CS-014 kot rešene v `docs/CODE_SMELLS.md`
 - označi preostale smell-e (CS-001–CS-004, CS-006–CS-008, CS-010, CS-012, CS-013, CS-015, CS-016) kot rešene v `docs/CODE_SMELLS.md` z navedenimi testi
 - sinhroniziraj `docs/MILESTONES.md`: MVP milestone 100 %, v1.0 odraža dokončan tehnični dolg in preostale UX/QA postavke

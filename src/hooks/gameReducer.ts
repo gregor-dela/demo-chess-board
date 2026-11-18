@@ -45,7 +45,8 @@ export const initialGameState: GameState = seedPositionCounts({
   positionCounts: {},
   mode: 'pvp',
   aiSettings: { aiPlays: 'black', depth: 3, moveTimeMs: 1200, autoAnalyze: false, style: 'balanced' },
-  aiThinking: false
+  aiThinking: false,
+  aiProgress: null
 })
 
 // Game state reducer
@@ -182,7 +183,14 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     case 'SET_AI_THINKING':
       return {
         ...state,
-        aiThinking: action.value
+        aiThinking: action.value,
+        // Ob koncu razmišljanja počisti napredek, da kartica ne ostane vidna.
+        aiProgress: action.value ? state.aiProgress : null
+      }
+    case 'SET_AI_PROGRESS':
+      return {
+        ...state,
+        aiProgress: action.progress
       }
 
     default:

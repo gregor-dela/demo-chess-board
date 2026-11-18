@@ -29,7 +29,7 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
   - Prominent Reset button with confirmation dialog
   - Undo move support (even after game end)
   - Redo move support to restore previously undone moves
-  - Mode toggle (Human vs Human or Human vs AI) with AI thinking indicator
+  - Mode toggle (Human vs Human or Human vs AI) with AI thinking indicator and live search progress (depth, eval, PV line, elapsed time)
   - Board orientation toggle (flip board)
 - **Game State Management**: Turn-based gameplay with proper state tracking
 - **Responsive Design**: Clean, modern UI that works on different screen sizes

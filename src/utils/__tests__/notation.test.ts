@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { BOARD_SIZE, getCoordinatesFromSquare } from '../../utils/board'
-import { generateAlgebraicNotation } from '../../utils/notation'
-import type { Board, ChessPiece, Move } from '../../types/chess'
+import { formatPrincipalVariation, generateAlgebraicNotation } from '../../utils/notation'
+import type { Board, CastlingRights, ChessPiece, Move, Square } from '../../types/chess'
 
 const emptyBoard = (): Board => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))
 
@@ -232,5 +232,76 @@ describe('generateAlgebraicNotation - promotion, en passant, castling, disambigu
     }
     expect(generateAlgebraicNotation(board, move, 'check')).toBe('Qh5+')
     expect(generateAlgebraicNotation(board, move, 'checkmate')).toBe('Qh5#')
+  })
+})
+
+describe('formatPrincipalVariation', () => {
+  const noRights: CastlingRights = {
+    white: { kingSide: false, queenSide: false },
+    black: { kingSide: false, queenSide: false },
+  }
+
+  const place = (board: Board, sq: string, piece: ChessPiece) => {
+    const [r, c] = getCoordinatesFromSquare(sq)
+    board[r][c] = piece
+  }
+
+  it('vrne prazen niz za prazno PV', () => {
+    expect(formatPrincipalVariation([], emptyBoard(), 'white', noRights, null)).toBe('')
+  })
+
+  it('oštevilči poteze obeh strani od 1', () => {
+    const board = emptyBoard()
+    place(board, 'e2', { type: 'pawn', color: 'white', hasMoved: false })
+    place(board, 'e7', { type: 'pawn', color: 'black', hasMoved: false })
+    place(board, 'g1', { type: 'knight', color: 'white', hasMoved: false })
+    place(board, 'b8', { type: 'knight', color: 'black', hasMoved: false })
+
+    const pv: Array<{ from: Square; to: Square }> = [
+      { from: 'e2', to: 'e4' },
+      { from: 'e7', to: 'e5' },
+      { from: 'g1', to: 'f3' },
+      { from: 'b8', to: 'c6' },
+    ]
+
+    expect(formatPrincipalVariation(pv, board, 'white', noRights, null)).toBe('1. e4 e5 2. Nf3 Nc6')
+  })
+
+  it('označi začetek s črnim kot "1..."', () => {
+    const board = emptyBoard()
+    place(board, 'e7', { type: 'pawn', color: 'black', hasMoved: false })
+    expect(formatPrincipalVariation([{ from: 'e7', to: 'e5' }], board, 'black', noRights, null)).toBe('1... e5')
+  })
+
+  it('uporabi podano začetno številko polpoteze', () => {
+    const board = emptyBoard()
+    place(board, 'e2', { type: 'pawn', color: 'white', hasMoved: false })
+    expect(formatPrincipalVariation([{ from: 'e2', to: 'e4' }], board, 'white', noRights, null, 12)).toBe('12. e4')
+  })
+
+  it('prikaže zajem, rokado in promocijo', () => {
+    const captureBoard = emptyBoard()
+    place(captureBoard, 'e4', { type: 'pawn', color: 'white', hasMoved: true })
+    place(captureBoard, 'd5', { type: 'pawn', color: 'black', hasMoved: true })
+    expect(formatPrincipalVariation([{ from: 'e4', to: 'd5' }], captureBoard, 'white', noRights, null)).toBe('1. exd5')
+
+    const castleBoard = emptyBoard()
+    place(castleBoard, 'e1', { type: 'king', color: 'white', hasMoved: false })
+    place(castleBoard, 'h1', { type: 'rook', color: 'white', hasMoved: false })
+    const rights: CastlingRights = {
+      white: { kingSide: true, queenSide: false },
+      black: { kingSide: false, queenSide: false },
+    }
+    expect(formatPrincipalVariation([{ from: 'e1', to: 'g1' }], castleBoard, 'white', rights, null)).toBe('1. O-O')
+
+    const promoBoard = emptyBoard()
+    place(promoBoard, 'e7', { type: 'pawn', color: 'white', hasMoved: true })
+    expect(formatPrincipalVariation([{ from: 'e7', to: 'e8' }], promoBoard, 'white', noRights, null)).toBe('1. e8=Q')
+  })
+
+  it('se ustavi ob prvi neveljavni potezi', () => {
+    const board = emptyBoard()
+    // Polje e4 je prazno -> prva poteza ni veljavna, rezultat je prazen.
+    expect(formatPrincipalVariation([{ from: 'e4', to: 'e5' }], board, 'white', noRights, null)).toBe('')
   })
 })

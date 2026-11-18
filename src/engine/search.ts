@@ -267,6 +267,43 @@ function pieceAt(board: Board, sq: Square): ChessPiece | null {
   return board[r][c]
 }
 
+/**
+ * Rekonstruira principal variation tako, da sledi najboljšim potezam iz transpozicijske
+ * tabele od korenske pozicije. Ustavi se ob manjkajočem vnosu, neveljavni potezi,
+ * ponovljeni poziciji ali ko doseže `maxLength`. Vrne zaporedje koordinatnih potez.
+ */
+export function extractPrincipalVariation(
+  board: Board,
+  turn: PieceColor,
+  rights: CastlingRights,
+  enPassant: Square | null,
+  tt: Map<bigint, TTEntry>,
+  maxLength: number = 8
+): Array<{ from: Square, to: Square }> {
+  const line: Array<{ from: Square, to: Square }> = []
+  const seen = new Set<string>()
+  let b = board
+  let t = turn
+  let r = rights
+  let ep = enPassant
+  for (let i = 0; i < maxLength; i++) {
+    const key = zobristHash(b, t, r, ep)
+    const keyStr = key.toString()
+    if (seen.has(keyStr)) break
+    seen.add(keyStr)
+    const entry = tt.get(key)
+    if (!entry || !entry.move) break
+    const applied = applyEngineMove(b, entry.move.from, entry.move.to, r, ep)
+    if (!applied) break
+    line.push(entry.move)
+    b = applied.board
+    t = t === 'white' ? 'black' : 'white'
+    r = applied.nextRights
+    ep = applied.nextEnPassant
+  }
+  return line
+}
+
 function isFriedLiverPattern(board: Board): boolean {
   const wg5 = pieceAt(board, 'g5')
   const wc4 = pieceAt(board, 'c4')

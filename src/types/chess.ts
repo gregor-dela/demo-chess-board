@@ -54,6 +54,23 @@ export interface PendingPromotion {
   color: PieceColor;
 }
 
+// Napredek iskanja AI (issue #14): en zapis na vsako dokončano globino.
+export interface AiProgress {
+  // 'book' = poteza iz otvoritvene knjižnice (brez iskanja), 'search' = rezultat alpha-beta iskanja
+  source: 'book' | 'search';
+  // Trenutno dokončana globina (pri 'book' je 0) in ciljna globina iz nastavitev.
+  depth: number;
+  maxDepth: number;
+  // Ocena pozicije v centipawnih z vidika BELIH (pozitivno = bolje za belega).
+  scoreCp: number;
+  // Principal variation kot zaporedje koordinatnih potez (npr. e2e4, e7e5 …).
+  pv: Array<{ from: Square; to: Square }>;
+  elapsedMs: number;
+  timeBudgetMs: number;
+  // Najboljša poteza, znana po tej globini.
+  bestMove: { from: Square; to: Square } | null;
+}
+
 export interface GameState {
   board: Board;
   currentPlayer: PieceColor;
@@ -78,6 +95,8 @@ export interface GameState {
     style?: 'aggressive' | 'positional' | 'balanced';
   };
   aiThinking: boolean;
+  // Zadnji znani napredek iskanja AI; null, ko AI ne razmišlja.
+  aiProgress: AiProgress | null;
 }
 
 // Component props interfaces
@@ -134,6 +153,7 @@ export type GameAction =
   | { type: 'SET_VALID_MOVES'; moves: Square[] }
   | { type: 'UPDATE_GAME_STATUS'; status: GameStatus }
   | { type: 'SET_AI_THINKING'; value: boolean }
+  | { type: 'SET_AI_PROGRESS'; progress: AiProgress | null }
   | { type: 'TOGGLE_ORIENTATION' }
   | { type: 'TOGGLE_MODE' }
   | { type: 'SET_AI_SETTINGS'; settings: Partial<NonNullable<GameState['aiSettings']>> };

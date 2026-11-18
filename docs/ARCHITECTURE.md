@@ -33,7 +33,7 @@
 - `TOGGLE_ORIENTATION`: preklopi orientacijo brez vpliva na logiko igre (`src/hooks/useChessGame.ts:397`).
 - Remi logika v reducerju po vsaki potezi: izračun `halfMoveClock`, posodobitev `positionCounts`, trojna ponovitev in 50-potezno pravilo nastavita `gameStatus='draw'` (`src/hooks/useChessGame.ts:124`).
  - Blokada potez po koncu: guardi v `SELECT_SQUARE` in `MAKE_MOVE` preprečijo nadaljnje poteze, ko `gameStatus` ni `active` ali `check` (`src/hooks/useChessGame.ts:28`, `src/hooks/useChessGame.ts:55`).
- - AI integracija: asinhroni klic `computeBestMove` prek `useEffect` ko je na potezi AI; akcije `TOGGLE_MODE` in `SET_AI_SETTINGS`.
+ - AI integracija: asinhroni generator `computeBestMoveProgress` prek `useEffect` ko je na potezi AI; vsak yield (dokončana globina) se objavi kot `SET_AI_PROGRESS` za UI, na koncu pa `MAKE_MOVE`; akcije `TOGGLE_MODE` in `SET_AI_SETTINGS`.
 
 ## Logika potez
 - Generator veljavnih potez `getValidMoves` delegira na posamezne tipe figur in filtrira poteze, ki puščajo kralja v šahu (`src/utils/moveValidation.ts:13`, `src/utils/moveValidation.ts:45`).
@@ -45,13 +45,14 @@
 ## Notacija potez (SAN)
 - Simboli figur, razločevanje izvora, oznaka zajema, destinacija, promocija, en passant, indikatorji šah/mat (`src/utils/chessUtils.ts:317`).
 - Rokiranje: `O-O` / `O-O-O` (`src/utils/chessUtils.ts:274`).
+- `formatPrincipalVariation` pretvori PV (koordinatne poteze) v oštevilčen SAN zapis za prikaz napredka AI (issue #14) (`src/utils/notation.ts`).
 
 ## UI arhitektura
 - `ChessGame`: orkestracija stanja in povezava med ploščo, kontrolami ter dialogi (`src/components/ChessGame.tsx:13`).
 - `ChessBoard`: izris plošče, oznake vrstic/datotek, integracija `ErrorBoundary` (`src/components/ChessBoard.tsx:29`).
 - `ChessSquare`: interakcije (klik, tipkovnica, DnD, touch), validacija vnosa (`src/components/ChessSquare.tsx:31`).
 - `ChessPiece`: DnD vir, sanitizacija, unicode simbol (`src/components/ChessPiece.tsx:11`).
-- `GameControls`: status igre, gumbi Reset/Undo/Redo, prikaz zgodovine potez (`src/components/GameControls.tsx:22`).
+- `GameControls`: status igre, gumbi Reset/Undo/Redo, prikaz zgodovine potez, AI nastavitve in kartica napredka iskanja AI (globina, eval, PV, čas) (`src/components/GameControls.tsx:22`).
 - Gumb za preklop orientacije (`src/components/GameControls.tsx:61`) sproži `TOGGLE_ORIENTATION`; `ChessBoard` izriše datoteke/range v odvisnosti od orientacije (`src/components/ChessBoard.tsx:8`).
 - `PromotionDialog` in `ConfirmationDialog`: dostopna dialoga, fokusna past, tipkovnična navigacija (`src/components/PromotionDialog.tsx:43`, `src/components/ConfirmationDialog.tsx:50`).
 
@@ -81,7 +82,8 @@
   - Premet: zajemi+SEE, killer/history, PV‑move iz TT, check bonus (lahka `isKingInCheck`) brez dragih status izračunov.
   - Ekstenzije: check‑extension (+1 ply), terminalna detekcija mate/stalemate/draw z minimizacijo razdalje do mata.
   - Quiescence: na listju izvede “stand pat” oceno in razširi samo zajeme z alfa‑beta, kar prepreči horizonta efekt pri taktikah.
-- `src/engine/ai.ts`: `computeBestMove(state, depth, moveTimeMs)` z iterativnim poglabljanjem, aspiration windows in globalno TT persistenco.
+- `src/engine/ai.ts`: `computeBestMoveProgress(state, depth, moveTimeMs)` z iterativnim poglabljanjem, aspiration windows in globalno TT persistenco — async generator, ki po vsaki dokončani globini yielda `AiProgress` (globina, ocena z vidika belih, PV, pretečeni čas); `computeBestMove` je tanek sinhroni ovoj, ki porabi generator in vrne le končno potezo.
+  - PV se rekonstruira iz transpozicijske tabele (`extractPrincipalVariation` v `search.ts`) brez dodatnega iskanja.
 - `src/engine/openingBook.ts`: opening book `getBookMove(state)`.
   - Lazy prebere `public/opening-book.json` (PGN→JSON) in izbira potez po zgodovini in `aiSettings.style`.
 

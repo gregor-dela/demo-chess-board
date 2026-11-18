@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { GameState } from '../types/chess'
+import { GameState, MovePreview } from '../types/chess'
 import { resetTranspositionTable } from '../engine/ai'
 import { initialGameState } from './gameReducer'
 import { useGameState } from './useGameState'
@@ -52,6 +52,10 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
     dispatch({ type: 'SET_AI_SETTINGS', settings })
   }, [bumpAiVersion, dispatch])
 
+  const setPreviewMove = useCallback((move: MovePreview | null) => {
+    dispatch({ type: 'SET_PREVIEW_MOVE', move })
+  }, [dispatch])
+
   return {
     gameState,
     handleSquareClick,
@@ -66,6 +70,7 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
     toggleOrientation,
     toggleMode,
     setAiSettings,
+    setPreviewMove,
     requestAiMove,
   }
 }

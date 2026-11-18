@@ -5,6 +5,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ## Neizdano
 
 ### Izboljšano
+- #13: grafična zgodovina potez — vrstice zgodovine v `GameControls` so interaktivni gumbi; ob hoveru ali fokusu se izvorno in ciljno polje poteze označita na plošči (`.chess-square-preview-move`), ob izgubi fokusa/hoverja pa oznaka izgine
+- #13: `previewMove` (`MovePreview`) v stanju igre in akcija `SET_PREVIEW_MOVE` prek `useChessGame.setPreviewMove`; predogled se samodejno počisti ob vsaki spremembi zgodovine (`MAKE_MOVE`, `COMPLETE_PROMOTION`, `UNDO_MOVE`, `REDO_MOVE`, `RESET_GAME`), da ne zaostaja za dejanskim stanjem
 - #14: kartica napredka iskanja AI v `GameControls` (PVAI) — prikaz globine (`X / Y`), ocene v centipawnih z vidika belih, PV linije v SAN in pretečenega časa/proračuna; kartica se prikaže med razmišljanjem in skrije ob koncu
 - #14: `computeBestMoveProgress` — async generator z iterativnim poglabljanjem, ki po vsaki dokončani globini objavi napredek (`AiProgress`); `computeBestMove` ostaja tanek sinhroni ovoj (porabi generator in vrne končno potezo)
 - #14: PV se rekonstruira iz transpozicijske tabele (`extractPrincipalVariation` v `search.ts`), brez dodatnega iskanja
@@ -23,6 +25,10 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
 
 ### Testi
+- #13: testi reducerja za `SET_PREVIEW_MOVE` in čiščenje predogleda ob potezi/undo/redo/reset (`gameReducer.previewMove.test.ts`, 7 testov)
+- #13: testi `ChessBoard` za označitev polj predogleda, odsotnost oznak brez predogleda, delovanje pri `blackBottom` in kotni potezi (`ChessBoard.previewMove.test.tsx`, 4 testi)
+- #13: testi `GameControls` za hover/izstop, fokus/blur, ločen predogled po vrsticah, dostopna imena vrstic in odsotnost vrstic brez potez (`GameControls.previewMove.test.tsx`, 5 testov)
+- #13: integracijski testi predogleda prek `<ChessGame/>` — hover označi na plošči, tipkovnični fokus, undo med predogledom počisti oznako, jest-axe brez kršitev (`MovePreview.integration.test.tsx`, 4 testi)
 - #14: testi za generator napredka (`ai.progress.test.ts`) — en zapis na globino, pretvorba ocene na vidik belih, veja otvoritvene knjižnice, remi pri `halfMoveClock ≥ 100`, časovni proračun (faza igre, šah, stil)
 - #14: testi reducerja za `SET_AI_PROGRESS` in čiščenje napredka ob `SET_AI_THINKING(false)` (`gameReducer.aiProgress.test.ts`)
 - #14: testi `useAIManager` z mockanim generatorjem — objava napredka ob vsakem yieldu, izvedba poteze na koncu, prekinitev ob zastareli verziji (`useAIManager.progress.test.ts`)
@@ -38,6 +44,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
 
 ### Dokumentacija
+- označi #13 (grafična zgodovina potez) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: `previewMove` v `GameState`, gumbi zgodovine in oznaka predogleda na plošči; `README.md`: funkcija predogleda poteze ob hoveru/fokusu
 - označi #14 (AI loading UI) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
 - osveži `docs/ARCHITECTURE.md`: generator napredka AI, rekonstrukcija PV iz TT, `formatPrincipalVariation` in kartica napredka v `GameControls`
 - označi CS-005, CS-009, CS-011, CS-014 kot rešene v `docs/CODE_SMELLS.md`

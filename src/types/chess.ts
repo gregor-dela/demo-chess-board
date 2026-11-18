@@ -54,6 +54,13 @@ export interface PendingPromotion {
   color: PieceColor;
 }
 
+// Predogled poteze iz zgodovine (issue #13): ob hoveru/fokusu vrstice zgodovine
+// se izvorno in ciljno polje označita na plošči.
+export interface MovePreview {
+  from: Square;
+  to: Square;
+}
+
 // Napredek iskanja AI (issue #14): en zapis na vsako dokončano globino.
 export interface AiProgress {
   // 'book' = poteza iz otvoritvene knjižnice (brez iskanja), 'search' = rezultat alpha-beta iskanja
@@ -97,6 +104,8 @@ export interface GameState {
   aiThinking: boolean;
   // Zadnji znani napredek iskanja AI; null, ko AI ne razmišlja.
   aiProgress: AiProgress | null;
+  // Poteza, ki se trenutno predogleduje (hover/fokus v zgodovini); null, ko ni predogleda.
+  previewMove: MovePreview | null;
 }
 
 // Component props interfaces
@@ -123,6 +132,7 @@ export interface GameControlsProps {
   onToggleOrientation: () => void;
   onToggleMode: () => void;
   onSetAiSettings: (settings: Partial<NonNullable<GameState['aiSettings']>>) => void;
+  onPreviewMove: (move: MovePreview | null) => void;
 }
 
 
@@ -154,6 +164,7 @@ export type GameAction =
   | { type: 'UPDATE_GAME_STATUS'; status: GameStatus }
   | { type: 'SET_AI_THINKING'; value: boolean }
   | { type: 'SET_AI_PROGRESS'; progress: AiProgress | null }
+  | { type: 'SET_PREVIEW_MOVE'; move: MovePreview | null }
   | { type: 'TOGGLE_ORIENTATION' }
   | { type: 'TOGGLE_MODE' }
   | { type: 'SET_AI_SETTINGS'; settings: Partial<NonNullable<GameState['aiSettings']>> };

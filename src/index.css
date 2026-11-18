@@ -134,7 +134,7 @@
   }
 
   .history-row {
-    @apply grid grid-cols-[auto_auto_1fr] items-center gap-3 rounded-xl border border-white/5 bg-slate-900/70 px-3 py-2 text-sm;
+    @apply grid w-full grid-cols-[auto_auto_1fr] items-center gap-3 rounded-xl border border-white/5 bg-slate-900/70 px-3 py-2 text-left text-sm transition duration-150 ease-out hover:border-cyan-400/40 hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
   }
 
   .history-row__index {
@@ -195,6 +195,10 @@
 
   .chess-square-last-move {
     @apply shadow-[inset_0_0_0_2px_rgba(253,224,71,0.8)] brightness-105;
+  }
+
+  .chess-square-preview-move {
+    @apply shadow-[inset_0_0_0_3px_rgba(217,70,239,0.9)] brightness-105;
   }
 
   .chess-square-selected {

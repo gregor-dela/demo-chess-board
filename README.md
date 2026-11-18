@@ -24,12 +24,14 @@ A fully functional chess game built with React, TypeScript, and Tailwind CSS. Fe
   - Highlighted selected pieces
   - Valid move indicators
   - Last move highlights
+  - Move preview: hovering or focusing a row in the move history highlights that move's from/to squares on the board
   - Chess board with alternating square colors
 - **Game Controls**:
   - Prominent Reset button with confirmation dialog
   - Undo move support (even after game end)
   - Redo move support to restore previously undone moves
   - Mode toggle (Human vs Human or Human vs AI) with AI thinking indicator and live search progress (depth, eval, PV line, elapsed time)
+  - Move history rows are focusable buttons; hover or keyboard focus previews the move on the board
   - Board orientation toggle (flip board)
 - **Game State Management**: Turn-based gameplay with proper state tracking
 - **Responsive Design**: Clean, modern UI that works on different screen sizes

@@ -57,21 +57,21 @@ _Vsebuje predhodne opravke: CODE_SMELLS (popravki), UX izboljšave, refactor eng
     - [x] CS-006: razdelitev `useChessGame.ts` (→ `useAIManager`, `useUndoRedo`, `useGameState`, `usePieceHandlers`; 71 vrstic)
     - [x] DRY helperji za legalnost potez (`applyEngineMove`, `isMoveLegal`, `attacksSquare`)
   - **UX / UI polish**:
-    - [ ] Grafična zgodovina potez (#13: predogled poteze ob hoveru)
+    - [x] Grafična zgodovina potez (#13: predogled poteze ob hoveru/fokusu vrstice zgodovine)
     - [x] Indikator "AI razmišlja" z napredkom (#14: globina X/Y, eval v cp, PV linija v SAN, pretečeni čas/proračun)
     - [ ] Šahovnice za figure (Unicode ligature) + option za SVG/PNG figure
     - [ ] Board theming (#11: izbira light/dark barv šahovnice)
   - **A11y & QA**:
     - [x] jest-axe audit celotnega <App/> drevesa (`App.a11y.test.tsx`)
     - [ ] Manual screen reader test (VoiceOver/NVDA) - preveri check/checkmate announcement
-    - [x] Coverage pragovi dvignjeni na DoD (95/90/95/95), dejansko 97.52/91.53/97.40/97.52 %
+    - [x] Coverage pragovi dvignjeni na DoD (95/90/95/95), dejansko 97.54/91.59/97.46/97.54 %
     - [~] Smoke test za kombinacije modov — delno pokrito z integracijskimi a11y testi
 - **Obljubljivosti (DoD)**:
   - [x] `npm run build` → 0 warningov
   - [x] `npm run test:coverage` → Statements ≥95%, Functions ≥95%, Lines ≥95%, Branches ≥90%
   - [x] `npm run lint` → 0
   - [ ] Ročno preverjeno v Chrome/Safari/Firefox + mobilni Safari (iOS + Android)
-- **Progress**: ~80% (tehnični dolg zaključen; ostajajo preostale UX/UI polish postavke in ročni QA)
+- **Progress**: ~85% (tehnični dolg in grafična zgodovina potez zaključena; ostajajo preostale UX/UI polish postavke in ročni QA)
 
 ### Milestone: **"v1.1 - Multiplayer Online"**
 - **Rok**: 2026-10-30 (primerno)

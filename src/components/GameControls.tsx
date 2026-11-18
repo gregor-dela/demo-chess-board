@@ -55,6 +55,7 @@ const GameControls: React.FC<GameControlsProps> = ({
   onToggleOrientation,
   onToggleMode,
   onSetAiSettings,
+  onPreviewMove,
 }) => {
   const [showResetDialog, setShowResetDialog] = useState(false)
   const statusCopy = getStatusCopy(gameState)
@@ -260,15 +261,29 @@ const GameControls: React.FC<GameControlsProps> = ({
           {gameState.moveHistory.length === 0 ? (
             <p className="history-panel__empty">No moves yet</p>
           ) : (
-            gameState.moveHistory.map((move, index) => (
-              <div key={`${move.from}-${move.to}-${index}`} className="history-row">
-                <span className="history-row__index">{index + 1}.</span>
-                <span className="history-row__notation">{move.notation}</span>
-                <span className="history-row__path">
-                  {move.from} → {move.to}
-                </span>
-              </div>
-            ))
+            gameState.moveHistory.map((move, index) => {
+              // Predogled poteze (issue #13): ob hoveru ali fokusu vrstice se
+              // izvorno in ciljno polje označita na plošči; ob izgubi fokusa/hoverja se počisti.
+              const preview = { from: move.from, to: move.to }
+              return (
+                <button
+                  key={`${move.from}-${move.to}-${index}`}
+                  type="button"
+                  className="history-row"
+                  aria-label={`Move ${index + 1}: ${move.notation}, ${move.from} to ${move.to}`}
+                  onMouseEnter={() => onPreviewMove(preview)}
+                  onMouseLeave={() => onPreviewMove(null)}
+                  onFocus={() => onPreviewMove(preview)}
+                  onBlur={() => onPreviewMove(null)}
+                >
+                  <span className="history-row__index">{index + 1}.</span>
+                  <span className="history-row__notation">{move.notation}</span>
+                  <span className="history-row__path">
+                    {move.from} → {move.to}
+                  </span>
+                </button>
+              )
+            })
           )}
         </div>
       </section>

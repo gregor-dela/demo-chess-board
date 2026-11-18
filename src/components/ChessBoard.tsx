@@ -46,6 +46,8 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                   const squareColor = getSquareColor(file, rank)
                   const lastMove = gameState.moveHistory.length > 0 ? gameState.moveHistory[gameState.moveHistory.length - 1] : null
                   const isLastMove = lastMove ? (lastMove.from === square || lastMove.to === square) : false
+                  const preview = gameState.previewMove
+                  const isPreviewMove = preview ? (preview.from === square || preview.to === square) : false
 
                   return (
                     <ChessSquare
@@ -59,6 +61,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                       onPieceDrop={onPieceDrop}
                       currentSelected={gameState.selectedSquare}
                       isLastMove={isLastMove}
+                      isPreviewMove={isPreviewMove}
                     />
                   )
                 })

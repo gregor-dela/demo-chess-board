@@ -23,6 +23,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
     toggleOrientation,
     toggleMode,
     setAiSettings,
+    setPreviewMove,
   } = useChessGame(initialState)
 
   return (
@@ -43,6 +44,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
           onToggleOrientation={toggleOrientation}
           onToggleMode={toggleMode}
           onSetAiSettings={setAiSettings}
+          onPreviewMove={setPreviewMove}
         />
       </div>
 

@@ -28,7 +28,7 @@ This file provides guidance to agents when working with code in this repository.
   - npm run test:quick (quick subset used by pre-commit)
   - Coverage thresholds: statements ≥ 80%, functions ≥ 80%, lines ≥ 80%, branches ≥ 70%
   - Test files located in src/components/__tests__/, src/hooks/__tests__/, src/utils/__tests__/, and src/engine/__tests__/
-  - UI tests cover ChessBoard/ChessSquare/ChessPiece DnD, PromotionDialog, ConfirmationDialog, ErrorBoundary, GameControls (status/actions/integration), board orientation, keyboard-only moves, touch tap-to-move, visual feedback, and last-move highlights
+  - UI tests cover ChessBoard/ChessSquare/ChessPiece DnD, PromotionDialog, ConfirmationDialog, ErrorBoundary, GameControls (status/actions/integration), board orientation, keyboard-only moves, touch tap-to-move, visual feedback, last-move highlights, and move preview from history (hover/focus)
   - Accessibility tests: jest-axe basic checks; live status regions; keyboard and touch flows
 
 ## Testno voden razvoj (TDD)
@@ -51,16 +51,17 @@ This file provides guidance to agents when working with code in this repository.
 - App composition (top-level flow)
   - src/main.tsx mounts <App />; App renders <ChessGame /> as the main container
   - ChessGame composes:
-    - ChessBoard: renders the 8x8 board grid with rank/file labels; supports board orientation; highlights selection, valid moves, and last move; exposes role=group and squares as role=button with accessible names; supports keyboard (Enter/Space) and touch tap-to-move
-    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator with live search progress card (depth, eval in cp, PV line in SAN, elapsed time), and move history in SAN; provides Reset (with confirmation), Undo, Redo, orientation toggle, and mode toggle
+    - ChessBoard: renders the 8x8 board grid with rank/file labels; supports board orientation; highlights selection, valid moves, last move, and the previewed move (from/to squares of the history row under hover/focus); exposes role=group and squares as role=button with accessible names; supports keyboard (Enter/Space) and touch tap-to-move
+    - GameControls: shows current player, game status (active/check/checkmate/stalemate/draw), mode, AI thinking indicator with live search progress card (depth, eval in cp, PV line in SAN, elapsed time), and move history in SAN as focusable rows that preview the move on hover/focus (onPreviewMove); provides Reset (with confirmation), Undo, Redo, orientation toggle, and mode toggle
     - ConfirmationDialog: reusable modal for reset confirmation with keyboard accessibility
     - PromotionDialog: accessible modal for pawn promotion selection (Queen/Rook/Bishop/Knight) with focus trap, keyboard navigation, and Escape to cancel
     - ErrorBoundary: wraps the board grid to handle rendering errors gracefully
 - State management and game logic
   - src/hooks/useChessGame.ts encapsulates all game state using useReducer
-    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress
-    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS
+    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress, previewMove
+    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS, SET_PREVIEW_MOVE
     - Workflow: clicks or drops dispatch actions; reducer updates board and history, toggles player; promotion handled via pendingPromotion flow
+    - Move preview: SET_PREVIEW_MOVE sets previewMove (from/to); cleared on MAKE_MOVE/COMPLETE_PROMOTION/UNDO_MOVE/REDO_MOVE/RESET_GAME so it never lags behind history
     - Tracks castling rights and en passant target based on king/rook/pawn moves
     - Automatically detects and sets checkmate/stalemate/check status after each move and undo/redo
     - Draw detection: threefold repetition + 50-move rule via positionCounts and halfMoveClock

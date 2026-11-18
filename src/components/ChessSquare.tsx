@@ -13,6 +13,7 @@ interface ChessSquareProps {
   onPieceDrop: (from: Square, to: Square) => void
   currentSelected: Square | null
   isLastMove?: boolean
+  isPreviewMove?: boolean
 }
 
 const ChessSquare: React.FC<ChessSquareProps> = ({
@@ -24,7 +25,8 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   onSquareClick,
   onPieceDrop,
   currentSelected,
-  isLastMove
+  isLastMove,
+  isPreviewMove
 }) => {
   const handleClick = () => {
     onSquareClick(square)
@@ -83,6 +85,7 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
     isSelected ? 'chess-square-selected' : '',
     isValidMove ? 'chess-square-valid-move' : '',
     isLastMove ? 'chess-square-last-move ring-2 ring-yellow-400' : '',
+    isPreviewMove ? 'chess-square-preview-move' : '',
   ].filter(Boolean).join(' ')
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

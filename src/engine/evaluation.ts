@@ -463,8 +463,13 @@ export function evaluate(board: Board, turn: PieceColor, halfMoveClock = 0): num
       else if (p.type === 'queen') phase += 4
     }
   }
-  const mgExtras = evaluatePawnStructure(board) + bishopPairBonus(board) + rookFileBonuses(board) + kingSafety(board) * 2 + Math.floor(kingDanger(board) * 1.2)
-  const egExtras = evaluatePawnStructure(board) + bishopPairBonus(board) + rookFileBonuses(board) + Math.floor(kingSafety(board) * 0.6) + Math.floor(kingDanger(board) * 0.6)
+  // CS-016: skupni členi so čiste funkcije plošče - izračunamo jih enkrat
+  // namesto dvakrat (prej ločeno za mg in eg), rezultat je identičen.
+  const commonExtras = evaluatePawnStructure(board) + bishopPairBonus(board) + rookFileBonuses(board)
+  const kingSafe = kingSafety(board)
+  const kingDangerScore = kingDanger(board)
+  const mgExtras = commonExtras + kingSafe * 2 + Math.floor(kingDangerScore * 1.2)
+  const egExtras = commonExtras + Math.floor(kingSafe * 0.6) + Math.floor(kingDangerScore * 0.6)
   scoreMg += mgExtras
   scoreEg += egExtras
   const maxPhase = 16

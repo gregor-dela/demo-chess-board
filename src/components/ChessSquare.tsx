@@ -16,6 +16,7 @@ interface ChessSquareProps {
   currentSelected: Square | null
   isLastMove?: boolean
   isPreviewMove?: boolean
+  tabIndex?: number
 }
 
 const ChessSquare: React.FC<ChessSquareProps> = ({
@@ -30,7 +31,8 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   onSquarePointerDown,
   currentSelected,
   isLastMove,
-  isPreviewMove
+  isPreviewMove,
+  tabIndex = 0
 }) => {
   const handleClick = () => {
     onSquareClick(square)
@@ -124,7 +126,7 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
       role="button"
       aria-label={ariaLabel}
       aria-pressed={isSelected || undefined}
-      tabIndex={0}
+      tabIndex={tabIndex}
       onKeyDown={handleKeyDown}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

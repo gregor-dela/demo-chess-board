@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ChessGame from '../ChessGame'
 
@@ -55,5 +55,28 @@ describe('Keyboard-only moves', () => {
 
     await user.keyboard('{Escape}')
     expect(from).not.toHaveAttribute('aria-pressed')
+  })
+
+  it('exposes only one tab stop on the board (roving tabindex)', async () => {
+    render(<ChessGame />)
+    await screen.findByLabelText(/e2\s+white pawn/i)
+
+    const squares = Array.from(document.querySelectorAll('[data-square]'))
+    const tabbable = squares.filter((s) => s.getAttribute('tabindex') === '0')
+
+    expect(squares).toHaveLength(64)
+    expect(tabbable).toHaveLength(1)
+  })
+
+  it('moves focus between squares with arrow keys', async () => {
+    const user = userEvent.setup()
+
+    render(<ChessGame />)
+
+    const a1 = await screen.findByLabelText(/a1\s+white rook/i)
+    act(() => a1.focus())
+    await user.keyboard('{ArrowRight}')
+
+    expect(screen.getByLabelText(/b1\s+white knight/i)).toHaveFocus()
   })
 })

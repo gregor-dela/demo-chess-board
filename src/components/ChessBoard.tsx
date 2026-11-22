@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import ChessSquare from './ChessSquare'
 import ErrorBoundary from './ErrorBoundary'
 import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
@@ -16,6 +16,41 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
   const files = isWhiteBottom ? ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] : ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
   const ranks = isWhiteBottom ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]
   const themePalette = getBoardThemePalette(gameState.boardTheme)
+
+  // Vrstni red polj v DOM (za roving tabindex in navigacijo s puščicami).
+  const renderedOrder = ranks.flatMap((rank) => files.map((file) => `${file}${rank}` as Square))
+
+  // Roving tabindex: v zaporedju Tab je le eno polje; med polji se premikamo s puščicami.
+  const [activeSquare, setActiveSquare] = useState<Square | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const tabbableSquare = activeSquare ?? renderedOrder[0]
+
+  const handleGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+    if (!arrowKeys.includes(e.key)) return
+    const from = (e.target as HTMLElement).getAttribute('data-square')
+    if (!from) return
+    const index = renderedOrder.indexOf(from as Square)
+    if (index === -1) return
+
+    const col = index % 8
+    let next = index
+    if (e.key === 'ArrowRight' && col < 7) next = index + 1
+    else if (e.key === 'ArrowLeft' && col > 0) next = index - 1
+    else if (e.key === 'ArrowDown' && index + 8 < 64) next = index + 8
+    else if (e.key === 'ArrowUp' && index - 8 >= 0) next = index - 8
+    else return
+
+    e.preventDefault()
+    const target = renderedOrder[next]
+    setActiveSquare(target)
+    gridRef.current?.querySelector<HTMLElement>(`[data-square="${target}"]`)?.focus()
+  }
+
+  const handleGridFocus = (e: React.FocusEvent<HTMLDivElement>) => {
+    const square = (e.target as HTMLElement).getAttribute('data-square')
+    if (square) setActiveSquare(square as Square)
+  }
 
   // Takojšnja izbira (issue: hitrejše vlečenje): ob pritisku z miško se figura
   // izbere in prikažejo se veljavne poteze, še preden se sproži nativni drag —
@@ -51,6 +86,9 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
               role="group"
               aria-label="Chess board"
               data-board-theme={themePalette.id}
+              ref={gridRef}
+              onKeyDown={handleGridKeyDown}
+              onFocus={handleGridFocus}
               style={{
                 '--board-light': themePalette.light,
                 '--board-dark': themePalette.dark,
@@ -84,6 +122,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                       currentSelected={gameState.selectedSquare}
                       isLastMove={isLastMove}
                       isPreviewMove={isPreviewMove}
+                      tabIndex={square === tabbableSquare ? 0 : -1}
                     />
                   )
                 })

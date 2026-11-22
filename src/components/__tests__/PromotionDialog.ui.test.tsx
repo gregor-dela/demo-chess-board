@@ -7,6 +7,8 @@ import { initialGameState } from '../../hooks/useChessGame'
 
 const emptyBoard = (): (ChessPiece | null)[][] => Array(8).fill(null).map(() => Array(8).fill(null))
 
+const pieceOrderLabels = ['White Queen', 'White Rook', 'White Bishop', 'White Knight']
+
 function setupGameWithPromotionPending() {
   const board = emptyBoard()
   // White pawn e7; kings e1 and a8
@@ -96,6 +98,33 @@ describe('PromotionDialog UI', () => {
 
     // Expect Bishop result
     expect(await screen.findByLabelText(/e8\s+white bishop/i)).toBeInTheDocument()
+  })
+
+  it('renders promotion option buttons with readable (dark) text on the white dialog', async () => {
+    const user = userEvent.setup()
+    const init = setupGameWithPromotionPending()
+
+    render(<ChessGame initialState={init} />)
+
+    const from = await screen.findByLabelText(/e7\s+white pawn/i)
+    const to = await screen.findByLabelText(/e8\s+empty/i)
+    await user.click(from)
+    await user.click(to)
+
+    const dialog = await screen.findByRole('dialog', { name: /promote pawn/i })
+
+    // Dialog uses a white background; the container must set a dark text color
+    // so the title and promotion buttons don't inherit the body's light text.
+    expect(dialog.className).toMatch(/text-(slate|gray|zinc|neutral)-[89]00/)
+
+    // Each promotion option button must carry an explicit text color class so
+    // its label stays readable against the dialog background.
+    const optionButtons = pieceOrderLabels.map((label) =>
+      within(dialog).getByRole('button', { name: new RegExp(label, 'i') })
+    )
+    for (const btn of optionButtons) {
+      expect(btn.className).toMatch(/text-(slate|gray|zinc|neutral)-[789]00/)
+    }
   })
 
   it('traps focus with Tab/Shift+Tab and closes on Escape', async () => {

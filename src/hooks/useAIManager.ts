@@ -12,6 +12,7 @@ import { computeBestMoveProgress } from '../engine/ai'
 export const useAIManager = (gameState: GameState, dispatch: Dispatch<GameAction>) => {
   const aiBusyRef = useRef(false)
   const aiVersionRef = useRef(0)
+  const aiThinkingTokenRef = useRef(0)
 
   const bumpAiVersion = useCallback(() => {
     aiVersionRef.current += 1
@@ -23,6 +24,7 @@ export const useAIManager = (gameState: GameState, dispatch: Dispatch<GameAction
     if (gameState.currentPlayer !== (gameState.aiSettings?.aiPlays ?? 'black')) return
     if (aiBusyRef.current) return
     const versionAtRequest = aiVersionRef.current
+    const thinkingToken = ++aiThinkingTokenRef.current
     aiBusyRef.current = true
     dispatch({ type: 'SET_AI_THINKING', value: true })
     try {
@@ -45,7 +47,10 @@ export const useAIManager = (gameState: GameState, dispatch: Dispatch<GameAction
         dispatch({ type: 'MAKE_MOVE', from: best.from, to: best.to })
       }
     } finally {
-      if (aiVersionRef.current === versionAtRequest) {
+      // Indikator ugasnemo, dokler ta zahteva še "poseduje" žeton razmišljanja.
+      // Tako ob preklicu (Undo/Reset/sprememba nastavitev) AI ne pusti viseti
+      // "AI is thinking"; nova zahteva pa prevzame nov žeton in ponovno prižge indikator.
+      if (aiThinkingTokenRef.current === thinkingToken) {
         dispatch({ type: 'SET_AI_THINKING', value: false })
       }
       aiBusyRef.current = false

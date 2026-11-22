@@ -98,7 +98,7 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onSele
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-white rounded-lg shadow-xl p-6 w-80"
+        className="bg-white text-slate-900 rounded-lg shadow-xl p-6 w-80"
       >
         <h2 id={titleId} className="text-lg font-bold mb-4">Promote Pawn</h2>
         <p className="text-sm text-gray-600 mb-3">Choose a piece to promote your pawn to:</p>
@@ -110,7 +110,7 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ isOpen, color, onSele
             <button
               key={p}
               ref={idx === 0 ? firstBtnRef : undefined}
-              className={`border rounded-lg py-2 px-3 text-sm font-semibold transition ${selected === p ? 'border-blue-600 ring-2 ring-blue-300' : 'border-gray-300 hover:border-gray-400'}`}
+              className={`border rounded-lg py-2 px-3 text-sm font-semibold transition bg-white text-slate-800 hover:bg-slate-100 ${selected === p ? 'border-blue-600 ring-2 ring-blue-300' : 'border-gray-300 hover:border-gray-400'}`}
               onClick={() => onSelect(p)}
               aria-pressed={selected === p}
             >

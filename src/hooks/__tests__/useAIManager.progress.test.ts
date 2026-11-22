@@ -98,6 +98,32 @@ describe('useAIManager - napredek iskanja (issue #14)', () => {
     expect(actions(dispatch).filter((a) => a.type === 'MAKE_MOVE')).toHaveLength(0)
   })
 
+  it('ob preklicu med iskanjem (npr. Undo) pošlje SET_AI_THINKING(false), da indikator ne obvisi', async () => {
+    let release: () => void = () => {}
+    mocks.computeBestMoveProgress.mockImplementation(async function* () {
+      yield progressAt(1, { from: 'e7', to: 'e5' })
+      await new Promise<void>((resolve) => { release = resolve })
+      yield progressAt(2, { from: 'e7', to: 'e5' })
+    })
+
+    const dispatch = vi.fn()
+    const { result } = renderHook(() => useAIManager(pvAiBlackToMove(), dispatch))
+    await flush()
+
+    const before = actions(dispatch).filter((a) => a.type === 'SET_AI_THINKING')
+    expect(before[before.length - 1]).toMatchObject({ value: true })
+
+    await act(async () => {
+      result.current.bumpAiVersion()
+      release()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    const thinking = actions(dispatch).filter((a) => a.type === 'SET_AI_THINKING')
+    expect(thinking[thinking.length - 1]).toMatchObject({ value: false })
+    expect(actions(dispatch).filter((a) => a.type === 'MAKE_MOVE')).toHaveLength(0)
+  })
+
   it('v pvp načinu ne zažene iskanja', async () => {
     const dispatch = vi.fn()
     renderHook(() => useAIManager({ ...initialGameState, mode: 'pvp' }, dispatch))

@@ -15,7 +15,15 @@ export const useUndoRedo = (
   const undoMove = useCallback(() => {
     bumpAiVersion()
     dispatch({ type: 'UNDO_MOVE' })
-  }, [dispatch, bumpAiVersion])
+    // V pvai načinu: če je zadnjo potezo odigral AI, bi po enem Undo spet prišel na vrsto
+    // AI in takoj ponovno odigral (poteza se uporabniku "ne bi vrnila"). Zato v tem primeru
+    // odstranimo še človekovo potezo, da uporabnik dobi svoj položaj nazaj.
+    const aiColor = gameState.aiSettings?.aiPlays ?? 'black'
+    const lastMover = gameState.currentPlayer === 'white' ? 'black' : 'white'
+    if ((gameState.mode ?? 'pvp') === 'pvai' && lastMover === aiColor && gameState.moveHistory.length > 1) {
+      dispatch({ type: 'UNDO_MOVE' })
+    }
+  }, [dispatch, bumpAiVersion, gameState])
 
   const redoMove = useCallback(() => {
     bumpAiVersion()

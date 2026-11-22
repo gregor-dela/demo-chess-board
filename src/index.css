@@ -98,7 +98,7 @@
   }
 
   .control-button--danger {
-    @apply bg-rose-500 text-white hover:bg-rose-400;
+    @apply bg-rose-600 text-white hover:bg-rose-700;
   }
 
   .status-pill {
@@ -130,7 +130,7 @@
   }
 
   .history-panel__empty {
-    @apply py-6 text-center italic text-slate-500;
+    @apply py-6 text-center italic text-slate-400;
   }
 
   .history-row {
@@ -150,7 +150,8 @@
   }
 
   .board-stage {
-    @apply flex flex-col min-w-[max-content] shrink-0 w-fit rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur gap-2;
+    --square-size: clamp(1.5rem, calc((100vw - 8rem) / 8), 4rem);
+    @apply flex flex-col shrink-0 w-fit rounded-[2rem] border border-white/10 bg-slate-950/80 p-3 shadow-2xl shadow-black/40 backdrop-blur gap-2;
   }
 
   .board-stage__frame {
@@ -170,11 +171,14 @@
   }
 
   .board-stage__label {
-    @apply flex h-16 w-8 items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-slate-400;
+    @apply flex items-center justify-center text-sm font-semibold uppercase tracking-[0.2em] text-slate-400;
+    width: 2rem;
+    height: var(--square-size, 4rem);
   }
 
   .board-stage__files .board-stage__label {
-    @apply h-auto w-16 pt-1;
+    @apply h-auto pt-1;
+    width: var(--square-size, 4rem);
   }
 
   .board-grid {
@@ -182,7 +186,9 @@
   }
 
   .chess-square {
-    @apply relative flex h-16 w-16 cursor-pointer items-center justify-center transition duration-200 ease-out hover:brightness-110 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
+    @apply relative flex cursor-pointer items-center justify-center transition duration-200 ease-out hover:brightness-110 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
+    width: var(--square-size, 4rem);
+    height: var(--square-size, 4rem);
   }
 
   .chess-square-light {
@@ -210,11 +216,13 @@
   }
 
   .chess-square-valid-move::after {
-    @apply pointer-events-none absolute inset-0 m-4 rounded-full bg-cyan-300/35 content-[''];
+    @apply pointer-events-none absolute inset-0 rounded-full bg-cyan-300/35 content-[''];
+    margin: 25%;
   }
 
   .chess-piece {
-    @apply relative z-[2] text-4xl select-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-110;
+    @apply relative z-[2] select-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] transition-transform duration-200 hover:scale-110;
+    font-size: calc(var(--square-size, 4rem) * 0.5625);
   }
 
   /* Takojšen odziv ob pritisku (issue: hitrejše vlečenje): figura se takoj poveča,

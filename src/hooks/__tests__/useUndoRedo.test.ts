@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { useGameState } from '../useGameState'
 import { usePieceHandlers } from '../usePieceHandlers'
 import { useUndoRedo } from '../useUndoRedo'
+import { initialGameState } from '../gameReducer'
 
 const useHarness = () => {
   const { gameState, dispatch } = useGameState()
@@ -11,9 +12,25 @@ const useHarness = () => {
   return { gameState, undoMove, redoMove, canUndo, canRedo, handleSquareClick, handlePieceDrop }
 }
 
+const usePvAiHarness = () => {
+  const init = {
+    ...initialGameState,
+    mode: 'pvai' as const,
+    aiSettings: { aiPlays: 'black' as const, depth: 2, moveTimeMs: 100 },
+  }
+  const { gameState, dispatch } = useGameState(init)
+  const { undoMove, redoMove, canUndo, canRedo } = useUndoRedo(gameState, dispatch, () => {})
+  const { handleSquareClick, handlePieceDrop } = usePieceHandlers(dispatch)
+  return { gameState, undoMove, redoMove, canUndo, canRedo, handleSquareClick, handlePieceDrop }
+}
+
 type Harness = ReturnType<typeof useHarness>
 
-const playMove = (result: { current: Harness }, from: string, to: string) => {
+const playMove = (
+  result: { current: Pick<Harness, 'handleSquareClick' | 'handlePieceDrop'> },
+  from: string,
+  to: string
+) => {
   act(() => {
     result.current.handleSquareClick(from)
     result.current.handlePieceDrop(from, to)
@@ -64,5 +81,19 @@ describe('useUndoRedo', () => {
     unmount()
 
     expect(() => fireEvent.keyDown(window, { key: 'z', ctrlKey: true })).not.toThrow()
+  })
+
+  it('v pvai Undo po potezi AI odstrani obe potezi in vrne človeka na vrsto', () => {
+    const { result } = renderHook(() => usePvAiHarness())
+
+    playMove(result, 'e2', 'e4') // človek (beli)
+    playMove(result, 'e7', 'e5') // AI (črni)
+    expect(result.current.gameState.moveHistory).toHaveLength(2)
+    expect(result.current.gameState.currentPlayer).toBe('white')
+
+    act(() => result.current.undoMove())
+
+    expect(result.current.gameState.moveHistory).toHaveLength(0)
+    expect(result.current.gameState.currentPlayer).toBe('white')
   })
 })

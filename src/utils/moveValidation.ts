@@ -320,17 +320,79 @@ export const attacksSquare = (board: Board, from: Square, piece: ChessPiece, tar
   }
 }
 
+// CS-016: namesto skena vseh 64 polj preverimo le napade na kraljevo polje
+// (skakači, kmetje, kralj in drsni žarki). Rezultat je enak boolean, a bistveno ceneje.
+const KNIGHT_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1],
+]
+const KING_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1],
+]
+const ORTHO_DIRS: ReadonlyArray<readonly [number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+const DIAG_DIRS: ReadonlyArray<readonly [number, number]> = [[-1, -1], [-1, 1], [1, -1], [1, 1]]
+
 // Determine if a king of a given color is in check
 export const isKingInCheck = (board: Board, color: PieceColor, kingSquare?: Square | null): boolean => {
   const kingPos = kingSquare ?? findKingPosition(board, color)
   if (!kingPos) return false
 
-  // Scan opponent pieces and see if any directly attacks the king square
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
-      const piece = board[r][c]
-      if (!piece || piece.color === color) continue
-      if (attacksSquare(board, getSquareFromCoordinates(r, c), piece, kingPos)) return true
+  const [kr, kc] = getCoordinatesFromSquare(kingPos)
+  const enemy: PieceColor = color === 'white' ? 'black' : 'white'
+
+  // Knights
+  for (const [dr, dc] of KNIGHT_OFFSETS) {
+    const r = kr + dr
+    const c = kc + dc
+    if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) continue
+    const p = board[r][c]
+    if (p && p.color === enemy && p.type === 'knight') return true
+  }
+
+  // Pawns (a checking pawn sits where it would attack the king square)
+  const pawnRow = enemy === 'white' ? kr + 1 : kr - 1
+  if (pawnRow >= 0 && pawnRow < BOARD_SIZE) {
+    for (const dc of [-1, 1]) {
+      const c = kc + dc
+      if (c < 0 || c >= BOARD_SIZE) continue
+      const p = board[pawnRow][c]
+      if (p && p.color === enemy && p.type === 'pawn') return true
+    }
+  }
+
+  // Adjacent enemy king
+  for (const [dr, dc] of KING_OFFSETS) {
+    const r = kr + dr
+    const c = kc + dc
+    if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) continue
+    const p = board[r][c]
+    if (p && p.color === enemy && p.type === 'king') return true
+  }
+
+  // Sliding attackers: walk each ray to the first piece
+  for (const [dr, dc] of ORTHO_DIRS) {
+    let r = kr + dr
+    let c = kc + dc
+    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+      const p = board[r][c]
+      if (p) {
+        if (p.color === enemy && (p.type === 'rook' || p.type === 'queen')) return true
+        break
+      }
+      r += dr
+      c += dc
+    }
+  }
+  for (const [dr, dc] of DIAG_DIRS) {
+    let r = kr + dr
+    let c = kc + dc
+    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+      const p = board[r][c]
+      if (p) {
+        if (p.color === enemy && (p.type === 'bishop' || p.type === 'queen')) return true
+        break
+      }
+      r += dr
+      c += dc
     }
   }
   return false
@@ -341,8 +403,9 @@ export const isMoveLegal = (board: Board, from: Square, to: Square, color: Piece
   const piece = getPieceAtSquare(board, from)
   if (!piece || piece.color !== color) return false
   
-  // Simulate the move on a shallow-cloned board
-  const temp: Board = board.map(row => row.map(cell => (cell ? { ...cell } : null)))
+  // CS-016: plitvi klon (kot cloneBoard) - celice se le reassign-ajo, obstoječi
+  // objekti figur se ne mutirajo, zato kopiranje celic ni potrebno.
+  const temp: Board = board.map(row => row.slice())
   const [fromRow, fromCol] = getCoordinatesFromSquare(from)
   const [toRow, toCol] = getCoordinatesFromSquare(to)
 

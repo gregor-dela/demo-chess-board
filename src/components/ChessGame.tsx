@@ -13,6 +13,7 @@ interface ChessGameProps {
 const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
   const {
     gameState,
+    previewMove,
     handleSquareClick,
     handlePieceDrop,
     handleDeselect,
@@ -33,6 +34,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
       <div className="game-layout__board">
         <ChessBoard
           gameState={gameState}
+          previewMove={previewMove}
           onSquareClick={handleSquareClick}
           onPieceDrop={handlePieceDrop}
           onDeselect={handleDeselect}

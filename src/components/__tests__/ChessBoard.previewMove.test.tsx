@@ -1,12 +1,16 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 import ChessBoard from '../ChessBoard'
-import type { ChessBoardProps } from '../../types/chess'
+import type { ChessBoardProps, MovePreview } from '../../types/chess'
 import { baseGameState } from '../../test/chessTestUtils'
 
-const renderBoard = (overrides: Partial<ChessBoardProps['gameState']> = {}) => {
+const renderBoard = (
+  options: { previewMove?: MovePreview | null } & Partial<ChessBoardProps['gameState']> = {},
+) => {
+  const { previewMove = null, ...stateOverrides } = options
   const props: ChessBoardProps = {
-    gameState: baseGameState(overrides),
+    gameState: baseGameState(stateOverrides),
+    previewMove,
     onSquareClick: () => {},
     onPieceDrop: () => {},
   }

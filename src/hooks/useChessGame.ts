@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BoardTheme, GameState, MovePreview } from '../types/chess'
 import { resetTranspositionTable } from '../engine/ai'
 import { initialGameState } from './gameReducer'
@@ -19,6 +19,16 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
   const { requestAiMove, bumpAiVersion } = useAIManager(gameState, dispatch)
   const { handleSquareClick, handlePieceDrop, handleDeselect } = usePieceHandlers(dispatch)
   const { undoMove, redoMove, canUndo, canRedo } = useUndoRedo(gameState, dispatch, bumpAiVersion)
+
+  // Predogled poteze iz zgodovine (issue #13) je čisto UI stanje: hranimo ga ločeno
+  // od `gameState`, da hover/fokus vrstice v zgodovini ne sproži re-renderja celotnega
+  // drevesa (plošče in kontrolnega panela) — osvežita se le plošča in prizadeti polji.
+  const [previewMove, setPreviewMoveState] = useState<MovePreview | null>(null)
+
+  // Predogled ni več smiseln, ko se zgodovina spremeni (poteza, undo, redo, nova igra).
+  useEffect(() => {
+    setPreviewMoveState(null)
+  }, [gameState.moveHistory])
 
   const resetGame = useCallback(() => {
     bumpAiVersion()
@@ -53,8 +63,8 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
   }, [bumpAiVersion, dispatch])
 
   const setPreviewMove = useCallback((move: MovePreview | null) => {
-    dispatch({ type: 'SET_PREVIEW_MOVE', move })
-  }, [dispatch])
+    setPreviewMoveState(move)
+  }, [])
 
   const setBoardTheme = useCallback((theme: BoardTheme) => {
     dispatch({ type: 'SET_BOARD_THEME', theme })
@@ -62,6 +72,7 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
 
   return {
     gameState,
+    previewMove,
     handleSquareClick,
     handlePieceDrop,
     handleDeselect,

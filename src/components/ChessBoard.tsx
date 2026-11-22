@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import ChessSquare from './ChessSquare'
 import ErrorBoundary from './ErrorBoundary'
 import { CapturedPiecesTop, CapturedPiecesBottom } from './CapturedPieces'
@@ -8,6 +8,7 @@ import { getBoardThemePalette } from '../utils/boardThemes'
 
 const ChessBoard: React.FC<ChessBoardProps> = ({
   gameState,
+  previewMove,
   onSquareClick,
   onPieceDrop,
   onDeselect
@@ -24,6 +25,18 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
   const [activeSquare, setActiveSquare] = useState<Square | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const tabbableSquare = activeSquare ?? renderedOrder[0]
+
+  // Vrednosti, ki veljajo za vsa polja, izračunamo enkrat na render.
+  // Prej se je `lastMove` bral znotraj zanke (64× redundantno), `validMoves`
+  // pa je linearno iskal z `includes` za vsako polje posebej.
+  const validMoveSet = useMemo(() => new Set(gameState.validMoves), [gameState.validMoves])
+  const lastMove = gameState.moveHistory.length > 0
+    ? gameState.moveHistory[gameState.moveHistory.length - 1]
+    : null
+  // Predogled poteze (hover/fokus v vrstici zgodovine) je UI stanje in prihaja kot
+  // prop, ne iz `gameState` — zato hover ne re-renderira kontrolnega panela.
+  const preview = previewMove
+  const { board, currentPlayer } = gameState
 
   const handleGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
@@ -55,14 +68,14 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
   // Takojšnja izbira (issue: hitrejše vlečenje): ob pritisku z miško se figura
   // izbere in prikažejo se veljavne poteze, še preden se sproži nativni drag —
   // tako se odzivnost približa chess.com.
-  const handleSquarePointerDown = (square: Square, e: React.PointerEvent) => {
+  const handleSquarePointerDown = useCallback((square: Square, e: React.PointerEvent) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return
     const [row, col] = getCoordinatesFromSquare(square)
-    const piece = gameState.board[row][col]
-    if (piece && piece.color === gameState.currentPlayer) {
+    const piece = board[row][col]
+    if (piece && piece.color === currentPlayer) {
       onSquareClick(square)
     }
-  }
+  }, [board, currentPlayer, onSquareClick])
 
   return (
     <div className="board-stage">
@@ -98,14 +111,12 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                 files.map(file => {
                   const square = `${file}${rank}` as Square
                   const [row, col] = getCoordinatesFromSquare(square)
-                  const piece = gameState.board[row][col]
+                  const piece = board[row][col]
                   const isSelected = gameState.selectedSquare === square
-                  const isValidMove = gameState.validMoves.includes(square)
+                  const isValidMove = validMoveSet.has(square)
                   const squareColor = getSquareColor(file, rank)
-                  const lastMove = gameState.moveHistory.length > 0 ? gameState.moveHistory[gameState.moveHistory.length - 1] : null
-                  const isLastMove = lastMove ? (lastMove.from === square || lastMove.to === square) : false
-                  const preview = gameState.previewMove
-                  const isPreviewMove = preview ? (preview.from === square || preview.to === square) : false
+                  const isLastMove = !!lastMove && (lastMove.from === square || lastMove.to === square)
+                  const isPreviewMove = !!preview && (preview.from === square || preview.to === square)
 
                   return (
                     <ChessSquare

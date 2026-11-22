@@ -58,10 +58,10 @@ This file provides guidance to agents when working with code in this repository.
     - ErrorBoundary: wraps the board grid to handle rendering errors gracefully
 - State management and game logic
   - src/hooks/useChessGame.ts encapsulates all game state using useReducer
-    - State: board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress, previewMove, boardTheme
-    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS, SET_PREVIEW_MOVE, SET_BOARD_THEME
+    - State (useReducer): board (8×8), currentPlayer, moveHistory, redoHistory, gameStatus, selectedSquare, validMoves, isInCheck, castlingRights, enPassantTarget, pendingPromotion, orientation, halfMoveClock, positionCounts, mode, aiSettings, aiThinking, aiProgress, boardTheme
+    - Actions: SELECT_SQUARE, MAKE_MOVE, REQUEST_PROMOTION, COMPLETE_PROMOTION, CANCEL_PROMOTION, RESET_GAME, UNDO_MOVE, REDO_MOVE, SET_VALID_MOVES, UPDATE_GAME_STATUS, TOGGLE_ORIENTATION, TOGGLE_MODE, SET_AI_SETTINGS, SET_AI_THINKING, SET_AI_PROGRESS, SET_BOARD_THEME
     - Workflow: clicks or drops dispatch actions; reducer updates board and history, toggles player; promotion handled via pendingPromotion flow
-    - Move preview: SET_PREVIEW_MOVE sets previewMove (from/to); cleared on MAKE_MOVE/COMPLETE_PROMOTION/UNDO_MOVE/REDO_MOVE/RESET_GAME so it never lags behind history
+    - Move preview (issue #13): UI-only state kept outside the reducer (useState in useChessGame) and passed to ChessBoard as a `previewMove` prop, so hovering history rows does not re-render the control panel; cleared when moveHistory changes (move/undo/redo/reset) so it never lags behind history
     - Board theme: SET_BOARD_THEME sets boardTheme; RESET_GAME keeps the chosen theme ({ ...initialGameState, boardTheme: state.boardTheme }) so the user preference survives a new game
     - Tracks castling rights and en passant target based on king/rook/pawn moves
     - Automatically detects and sets checkmate/stalemate/check status after each move and undo/redo

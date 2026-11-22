@@ -106,8 +106,6 @@ export interface GameState {
   aiThinking: boolean;
   // Zadnji znani napredek iskanja AI; null, ko AI ne razmišlja.
   aiProgress: AiProgress | null;
-  // Poteza, ki se trenutno predogleduje (hover/fokus v zgodovini); null, ko ni predogleda.
-  previewMove: MovePreview | null;
   // Izbrana barvna tema šahovnice (issue #11).
   boardTheme: BoardTheme;
 }
@@ -115,6 +113,8 @@ export interface GameState {
 // Component props interfaces
 export interface ChessBoardProps {
   gameState: GameState;
+  // Poteza, ki se trenutno predogleduje (hover/fokus vrstice v zgodovini); null, ko ni predogleda.
+  previewMove?: MovePreview | null;
   onSquareClick: (square: Square) => void;
   onPieceDrop: (from: Square, to: Square) => void;
   onDeselect: () => void;
@@ -171,7 +171,6 @@ export type GameAction =
   | { type: 'UPDATE_GAME_STATUS'; status: GameStatus }
   | { type: 'SET_AI_THINKING'; value: boolean }
   | { type: 'SET_AI_PROGRESS'; progress: AiProgress | null }
-  | { type: 'SET_PREVIEW_MOVE'; move: MovePreview | null }
   | { type: 'SET_BOARD_THEME'; theme: BoardTheme }
   | { type: 'TOGGLE_ORIENTATION' }
   | { type: 'TOGGLE_MODE' }

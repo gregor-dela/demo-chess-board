@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { BoardTheme, GameControlsProps } from '../types/chess'
 import ConfirmationDialog from './ConfirmationDialog'
 import { formatPrincipalVariation } from '../utils/notation'
@@ -96,16 +96,26 @@ const GameControls: React.FC<GameControlsProps> = ({
   const formatSeconds = (ms: number): string => `${(ms / 1000).toFixed(1)}s`
 
   const aiProgress = gameState.aiProgress
-  const pvLine = aiProgress && aiProgress.source === 'search'
-    ? formatPrincipalVariation(
-        aiProgress.pv,
-        gameState.board,
-        gameState.currentPlayer,
-        gameState.castlingRights,
-        gameState.enPassantTarget,
-        Math.floor(gameState.moveHistory.length / 2) + 1
-      )
-    : ''
+  // Formatiranje PV vrstice (SAN) je razmeroma drago; memoiziramo ga, da se ne
+  // preračunava ob vsakem re-renderju panelu (npr. ob predogledu poteze).
+  const pvLine = useMemo(() => {
+    if (!aiProgress || aiProgress.source !== 'search') return ''
+    return formatPrincipalVariation(
+      aiProgress.pv,
+      gameState.board,
+      gameState.currentPlayer,
+      gameState.castlingRights,
+      gameState.enPassantTarget,
+      Math.floor(gameState.moveHistory.length / 2) + 1
+    )
+  }, [
+    aiProgress,
+    gameState.board,
+    gameState.currentPlayer,
+    gameState.castlingRights,
+    gameState.enPassantTarget,
+    gameState.moveHistory.length,
+  ])
 
   return (
     <div className="control-panel">
@@ -333,4 +343,4 @@ const GameControls: React.FC<GameControlsProps> = ({
   )
 }
 
-export default GameControls
+export default React.memo(GameControls)

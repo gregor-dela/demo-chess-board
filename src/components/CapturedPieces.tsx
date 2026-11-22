@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ChessPiece, PieceColor, Move } from '../types/chess'
 import { getPieceSymbol } from '../utils/chessUtils'
 
@@ -46,9 +46,17 @@ function materialDiff(capturedByWhite: ChessPiece[], capturedByBlack: ChessPiece
   return sum(capturedByWhite) - sum(capturedByBlack)
 }
 
-export const CapturedPiecesTop: React.FC<CapturedPiecesProps> = (props) => {
-  const { capturedByWhite, capturedByBlack } = extractCaptured(props.moveHistory)
-  const diff = materialDiff(capturedByWhite, capturedByBlack)
+const CapturedPiecesTopImpl: React.FC<CapturedPiecesProps> = (props) => {
+  // Izpeljava iz zgodovine je odvisna le od `moveHistory`, zato jo memoiziramo,
+  // da se ob vsakem re-renderju (npr. predogled poteze) ne preračunava znova.
+  const { capturedByWhite, capturedByBlack } = useMemo(
+    () => extractCaptured(props.moveHistory),
+    [props.moveHistory]
+  )
+  const diff = useMemo(
+    () => materialDiff(capturedByWhite, capturedByBlack),
+    [capturedByWhite, capturedByBlack]
+  )
   const captures: ChessPiece[] = props.orientation === 'whiteBottom'
     ? capturedByWhite
     : capturedByBlack
@@ -81,9 +89,15 @@ export const CapturedPiecesTop: React.FC<CapturedPiecesProps> = (props) => {
   )
 }
 
-export const CapturedPiecesBottom: React.FC<CapturedPiecesProps> = (props) => {
-  const { capturedByWhite, capturedByBlack } = extractCaptured(props.moveHistory)
-  const diff = materialDiff(capturedByWhite, capturedByBlack)
+const CapturedPiecesBottomImpl: React.FC<CapturedPiecesProps> = (props) => {
+  const { capturedByWhite, capturedByBlack } = useMemo(
+    () => extractCaptured(props.moveHistory),
+    [props.moveHistory]
+  )
+  const diff = useMemo(
+    () => materialDiff(capturedByWhite, capturedByBlack),
+    [capturedByWhite, capturedByBlack]
+  )
   const captures: ChessPiece[] = props.orientation === 'whiteBottom'
     ? capturedByBlack
     : capturedByWhite
@@ -115,3 +129,8 @@ export const CapturedPiecesBottom: React.FC<CapturedPiecesProps> = (props) => {
     </div>
   )
 }
+
+// `React.memo`: ob spremembah stanja, ki ne vplivajo na zgodovino/orientacijo
+// (npr. predogled poteze ali napredek AI), se komponenta ne re-renderira.
+export const CapturedPiecesTop = React.memo(CapturedPiecesTopImpl)
+export const CapturedPiecesBottom = React.memo(CapturedPiecesBottomImpl)

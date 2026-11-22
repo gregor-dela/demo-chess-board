@@ -56,7 +56,9 @@ describe('App a11y (celotno drevo)', () => {
 
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-  })
+    // Pod instrumentacijo pokritosti (vzporedna obremenitev) tudi ta test (userEvent + axe)
+    // preseže privzetih 5 s, zato mu dodelimo daljši časovni limit.
+  }, 20000)
 
   it('potrditveni dialog reset: Tab navigacija + Enter izvede reset', async () => {
     const user = userEvent.setup()

@@ -48,7 +48,6 @@ export const initialGameState: GameState = seedPositionCounts({
   aiSettings: { aiPlays: 'black', depth: 3, moveTimeMs: 1200, autoAnalyze: false, style: 'balanced' },
   aiThinking: false,
   aiProgress: null,
-  previewMove: null,
   boardTheme: DEFAULT_BOARD_THEME
 })
 
@@ -124,8 +123,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
 
       const move = createMoveFromState(state, from, to)
       if (!move) return state
-      // Ob izvedbi poteze počisti morebitni predogled iz zgodovine.
-      return { ...applyMoveToState(state, move), previewMove: null }
+      return applyMoveToState(state, move)
     }
 
     case 'REQUEST_PROMOTION': {
@@ -142,7 +140,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       if (!pp) return state
       const move = createMoveFromState(state, pp.from, pp.to, action.piece)
       if (!move) return { ...state, pendingPromotion: null }
-      return { ...applyMoveToState(state, move), pendingPromotion: null, previewMove: null }
+      return { ...applyMoveToState(state, move), pendingPromotion: null }
     }
 
     case 'CANCEL_PROMOTION': {
@@ -174,14 +172,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     case 'UNDO_MOVE': {
       if (state.moveHistory.length === 0) return state
       const lastMove = state.moveHistory[state.moveHistory.length - 1]
-      // Predogled iz zgodovine ni več smiseln po spremembi zgodovine.
-      return { ...undoMoveInState(state, lastMove), previewMove: null }
+      return undoMoveInState(state, lastMove)
     }
 
     case 'REDO_MOVE': {
       if (state.redoHistory.length === 0) return state
       const moveToRedo = state.redoHistory[state.redoHistory.length - 1]
-      return { ...redoMoveInState(state, moveToRedo), previewMove: null }
+      return redoMoveInState(state, moveToRedo)
     }
 
     case 'SET_VALID_MOVES':
@@ -206,11 +203,6 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       return {
         ...state,
         aiProgress: action.progress
-      }
-    case 'SET_PREVIEW_MOVE':
-      return {
-        ...state,
-        previewMove: action.move
       }
     case 'SET_BOARD_THEME':
       return {

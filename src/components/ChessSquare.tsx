@@ -147,4 +147,4 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   )
 }
 
-export default ChessSquare
+export default React.memo(ChessSquare)

@@ -11,6 +11,19 @@ const fileFromCol = (col: number): string => String.fromCharCode(FILE_A_CODE + c
 // File letter -> 0-based column index ('a' -> 0)
 const colFromFile = (file: string): number => file.charCodeAt(0) - FILE_A_CODE
 
+// CS-016: predpomnjene tabele za square <-> koordinate (64 vnosov) namesto
+// parseInt/charCodeAt na vsakem klicu. Vrednosti so identične kot prej.
+const squareByIndex: Square[] = new Array(BOARD_SIZE * BOARD_SIZE)
+const coordsBySquare: Record<string, readonly [number, number]> = Object.create(null)
+for (let r = 0; r < BOARD_SIZE; r++) {
+  for (let c = 0; c < BOARD_SIZE; c++) {
+    const sq = `${fileFromCol(c)}${BOARD_SIZE - r}` as Square
+    squareByIndex[r * BOARD_SIZE + c] = sq
+    coordsBySquare[sq] = [r, c]
+  }
+}
+const validSquareSet = new Set<string>(squareByIndex)
+
 // Get square color (light or dark)
 // Standard: a1 (white's corner) is dark; queen always starts on its own color
 export const getSquareColor = (file: string, rank: number): 'light' | 'dark' => {
@@ -20,24 +33,22 @@ export const getSquareColor = (file: string, rank: number): 'light' | 'dark' => 
 
 // Convert square notation to [row, col] board-array coordinates
 export const getCoordinatesFromSquare = (square: Square): [number, number] => {
-  const col = colFromFile(square[0])
-  const rank = parseInt(square[1], 10)
-  return [BOARD_SIZE - rank, col]
+  const cached = coordsBySquare[square]
+  if (cached) return [cached[0], cached[1]]
+  // Ohrani staro vedenje za neveljavne vnose
+  return [BOARD_SIZE - parseInt(square[1], 10), colFromFile(square[0])]
 }
 
 // Convert [row, col] board-array coordinates to square notation
 export const getSquareFromCoordinates = (row: number, col: number): Square => {
+  if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+    return squareByIndex[row * BOARD_SIZE + col]
+  }
   return `${fileFromCol(col)}${BOARD_SIZE - row}` as Square
 }
 
 // Check if a square is within board bounds
-export const isValidSquare = (square: Square): boolean => {
-  if (square.length !== 2) return false
-  const file = square[0]
-  const rank = parseInt(square[1], 10)
-  const maxFile = fileFromCol(BOARD_SIZE - 1)
-  return file >= 'a' && file <= maxFile && rank >= 1 && rank <= BOARD_SIZE
-}
+export const isValidSquare = (square: Square): boolean => validSquareSet.has(square)
 
 // Validate drag data format (e.g., 'e2')
 export const isValidDragData = (data: string | null | undefined): boolean => {

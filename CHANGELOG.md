@@ -4,17 +4,75 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 
 ## Neizdano
 
-### Dodano
-- #11 barvna tema plošče in odzivnejše vlečenje figur
-- #13 predogled poteze iz zgodovine ob hoveru/fokusu
-- #14 AI loading UI z napredkom iskanja (globina, eval, PV, čas)
+### Izboljšano
+- #11: barvna tema šahovnice — nov modul `boardThemes.ts` ponuja pet palet (Classic, Emerald, Ocean, Amethyst, Slate); barvi polj se nastavita prek CSS spremenljivk `--board-light`/`--board-dark` na `.board-grid`, uporabnik pa ju izbere z izbirnikom "Board theme" v `GameControls` (akcija `SET_BOARD_THEME`)
+- #11: izbrana tema se ohrani ob resetu igre (`RESET_GAME` vrne privzeto stanje z isto `boardTheme`); neznana tema varno pade nazaj na Classic
+- hitrejše vlečenje figur: ob pritisku z levim gumbom miške na figuro trenutnega igralca se ta takoj izbere (akcija `SELECT_SQUARE` prek `onPointerDown`), veljavne poteze pa so označene še pred sprožitvijo nativnega vlečenja; `:active` povečava figure brez prehoda in oster drag feedback (`setDragImage`, `effectAllowed = 'move'`), da se občutek približa chess.com
+- #13: grafična zgodovina potez — vrstice zgodovine v `GameControls` so interaktivni gumbi; ob hoveru ali fokusu se izvorno in ciljno polje poteze označita na plošči (`.chess-square-preview-move`), ob izgubi fokusa/hoverja pa oznaka izgine
+- #13: `previewMove` (`MovePreview`) v stanju igre in akcija `SET_PREVIEW_MOVE` prek `useChessGame.setPreviewMove`; predogled se samodejno počisti ob vsaki spremembi zgodovine (`MAKE_MOVE`, `COMPLETE_PROMOTION`, `UNDO_MOVE`, `REDO_MOVE`, `RESET_GAME`), da ne zaostaja za dejanskim stanjem
+- #14: kartica napredka iskanja AI v `GameControls` (PVAI) — prikaz globine (`X / Y`), ocene v centipawnih z vidika belih, PV linije v SAN in pretečenega časa/proračuna; kartica se prikaže med razmišljanjem in skrije ob koncu
+- #14: `computeBestMoveProgress` — async generator z iterativnim poglabljanjem, ki po vsaki dokončani globini objavi napredek (`AiProgress`); `computeBestMove` ostaja tanek sinhroni ovoj (porabi generator in vrne končno potezo)
+- #14: PV se rekonstruira iz transpozicijske tabele (`extractPrincipalVariation` v `search.ts`), brez dodatnega iskanja
+- #14: `formatPrincipalVariation` pretvori koordinatno PV v oštevilčen SAN zapis (upošteva zajeme, rokado, promocijo in disambiguacijo)
+- CS-015: optimizacija iskanja — `isKingInCheck` preverja napad na kraljevo polje neposredno (brez generiranja seznamov potez), attack map za SEE se zgradi največ enkrat na node, kraljevo polje nasprotnika se izračuna enkrat na node
+- CS-015: terminalna stanja (mat/pat) se hranijo v transpozicijski tabeli in se ob ponovnem obisku vrnejo takoj
+- CS-014: razločevanje SAN uporablja poceni `attacksSquare` + `isMoveLegal` namesto polne generacije potez (`getValidMoves`)
+- odzivna velikost šahovskih polj prek CSS spremenljivke `--square-size` (`clamp`), da se plošča na ozkih zaslonih (375/360/320 px) krči brez vodoravnega overflowa
+- višji kontrast za dostopnost: gumb "Reset game" (`rose-600`/`rose-700`) in prazna zgodovina potez (`slate-400`)
+
+### Spremenjeno
+- CS-011 – template-literal `Square` (`File`+`Rank`) in obvezna osnovna polja `GameState` (`halfMoveClock`, `positionCounts`, `mode`, `aiSettings`, `aiThinking`)
+- CS-005/CS-009 – izluščena `board.ts` (brez odvisnosti) in `notation.ts`; pretvorbe koordinat centralizirane, krožna odvisnost prekinjena
+- CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
+- #10 (SRP) – razdelitev `useChessGame.ts` (611 vrstic) na 4 specializirane hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) in pure reducer modul `gameReducer.ts`; `useChessGame` je zdaj kompozicija (71 vrstic), javni API nespremenjen
 
 ### Popravljeno
-- vidnost promocije, indikator AI, Undo v PvAI in odzivnost plošče
+- CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
+- popravki iz pregleda UI: (1) v dialogu za promocijo so bile možnosti neberljive (temno besedilo na belem ozadju ni bilo nastavljeno) — dodano temno besedilo na dialogu in gumbih; (2) indikator "AI is thinking" je ob preklicu (Undo/Reset/sprememba nastavitev) lahko obvisel — uveden ločen žeton razmišljanja v `useAIManager`; (3) v načinu PvAI je Undo po potezi AI sprožil takojšnjo ponovno potezo AI — `useUndoRedo` zdaj odstrani obe potezi, da uporabnik dobi svoj položaj nazaj
+
+### Testi
+- #11: testi palet in padca na privzeto temo (`boardThemes.test.ts`, 6 testov)
+- #11: testi reducerja za `SET_BOARD_THEME` in ohranitev teme ob resetu (`gameReducer.boardTheme.test.ts`, 6 testov)
+- #11: testi `ChessBoard` za atribut `data-board-theme` in vrednosti CSS spremenljivk ter `GameControls` za izbirnik teme (`ChessBoard.boardTheme.test.tsx`, `GameControls.boardTheme.test.tsx`, 8 testov)
+- hitrejše vlečenje: testi takojšnje izbire ob pritisku z miško (izbere figuro trenutnega igralca; ignorira prazno/tuje polje, dotik in desni gumb) in integracijski test oznake veljavnih potez prek `<ChessGame/>` (`PointerSelection.test.tsx`, 6 testov)
+- #13: testi reducerja za `SET_PREVIEW_MOVE` in čiščenje predogleda ob potezi/undo/redo/reset (`gameReducer.previewMove.test.ts`, 7 testov)
+- #13: testi `ChessBoard` za označitev polj predogleda, odsotnost oznak brez predogleda, delovanje pri `blackBottom` in kotni potezi (`ChessBoard.previewMove.test.tsx`, 4 testi)
+- #13: testi `GameControls` za hover/izstop, fokus/blur, ločen predogled po vrsticah, dostopna imena vrstic in odsotnost vrstic brez potez (`GameControls.previewMove.test.tsx`, 5 testov)
+- #13: integracijski testi predogleda prek `<ChessGame/>` — hover označi na plošči, tipkovnični fokus, undo med predogledom počisti oznako, jest-axe brez kršitev (`MovePreview.integration.test.tsx`, 4 testi)
+- #14: testi za generator napredka (`ai.progress.test.ts`) — en zapis na globino, pretvorba ocene na vidik belih, veja otvoritvene knjižnice, remi pri `halfMoveClock ≥ 100`, časovni proračun (faza igre, šah, stil)
+- #14: testi reducerja za `SET_AI_PROGRESS` in čiščenje napredka ob `SET_AI_THINKING(false)` (`gameReducer.aiProgress.test.ts`)
+- #14: testi `useAIManager` z mockanim generatorjem — objava napredka ob vsakem yieldu, izvedba poteze na koncu, prekinitev ob zastareli verziji (`useAIManager.progress.test.ts`)
+- #14: testi kartice v `GameControls` (prikaz/skritje, otvoritvena poteza, oblikovanje ocene) in `formatPrincipalVariation` (oštevilčenje, zajem, rokada, promocija)
+- CS-014: test pripete figure — pripeti kandidat ne zahteva razločevanja SAN (`Bc2`)
+- CS-011: `tsc --noEmit` čist tipski prehod; obstoječih 250 testov nespremenjenih
+- CS-010: enotski testi za 50-potezno pravilo v `quiescence()` (`quiescence.test.ts`) in integracijski AI testi prek `computeBestMove` (`ai.draw.integration.test.ts`): izogib trikrat ponovljeni poziciji, izbira poteze, ki resetira 50-potezni števec, ter remi pri `halfMoveClock >= 100`
+- CS-015: Scholar's mate regresijski test (Qxf7#), benchmark globine 4 s časovnim pragom in test terminalnosti v TT
+- #12 (a11y): end-to-end `App.a11y.test.tsx` — jest-axe audit celotnega drevesa `<App/>` in odprtih (portal) dialogov, tipkovnični/Enter flow do šahovskih polj ter Escape in Tab+Enter za potrditveni in promocijski dialog
+- CS-006: pure-function testi za `createMoveFromState`/`applyMoveToState`/`undoMoveInState`/`redoMoveInState` (14 testov)
+- #10: unit testi za nove hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) — 11 novih testov
+- CS-013: testi za AI nastavitve v `GameControls` — vse oznake težavnosti (depth 1–6, privzeti `?? 3`), oznake stila igre (balanced/aggressive/positional), veja `aiPlays === 'white'` ter posredovanje `onSetAiSettings` prek vseh treh izbirnih polj
+- CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
+- regresijski testi za pregled UI: berljivost možnosti promocije (`PromotionDialog.ui.test.tsx`), pošiljanje `SET_AI_THINKING(false)` ob preklicu iskanja (`useAIManager.progress.test.ts`) in dvojni Undo v PvAI (`useUndoRedo.test.ts`)
+
+### Dokumentacija
+- označi #11 (board theming) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: `boardTheme` v `GameState`, modul `boardThemes.ts`, CSS spremenljivki teme na plošči in takojšnja izbira ob pritisku; `README.md`: izbira teme plošče in odzivnejše vlečenje; `AGENTS.md`: povzetek teme in hitrejšega vlečenja
+- označi #13 (grafična zgodovina potez) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: `previewMove` v `GameState`, gumbi zgodovine in oznaka predogleda na plošči; `README.md`: funkcija predogleda poteze ob hoveru/fokusu
+- označi #14 (AI loading UI) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0
+- osveži `docs/ARCHITECTURE.md`: generator napredka AI, rekonstrukcija PV iz TT, `formatPrincipalVariation` in kartica napredka v `GameControls`
+- označi CS-005, CS-009, CS-011, CS-014 kot rešene v `docs/CODE_SMELLS.md`
+- označi preostale smell-e (CS-001–CS-004, CS-006–CS-008, CS-010, CS-012, CS-013, CS-015, CS-016) kot rešene v `docs/CODE_SMELLS.md` z navedenimi testi
+- sinhroniziraj `docs/MILESTONES.md`: MVP milestone 100 %, v1.0 odraža dokončan tehnični dolg in preostale UX/QA postavke
+- zabeleži pravilo angleške ključne besede `Closes #N` za samodejno zapiranje izdaj (AGENTS.md)
 
 ### Vzdrževanje
-- dvigni pragove pokritosti na DoD in sinhroniziraj dokumentacijo
-- zabeleži CS-005/009/011/014 in dvig pragov pokritosti
+- postopno dvigni pragove pokritosti na 90/85/90/90 (vmesni korak proti DoD v1.0)
+- dvigni pragove pokritosti na raven DoD v1.0 (statements/lines/functions ≥95, branches ≥90)
+- omeji merjenje pokritosti na izvorno kodo (`src/**`), izključi tipe, teste in konfiguracijske skripte
+- podaljšaj timeout promotion integracijskega testa pod pokritostjo
+- posodobi CHANGELOG za izboljšano matiranje v končnicah
+- sinhroniziraj marker `.changelog-last-sha` (#5, #10)
 
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a

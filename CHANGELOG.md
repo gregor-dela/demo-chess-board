@@ -19,6 +19,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-014: razločevanje SAN uporablja poceni `attacksSquare` + `isMoveLegal` namesto polne generacije potez (`getValidMoves`)
 - odzivna velikost šahovskih polj prek CSS spremenljivke `--square-size` (`clamp`), da se plošča na ozkih zaslonih (375/360/320 px) krči brez vodoravnega overflowa
 - višji kontrast za dostopnost: gumb "Reset game" (`rose-600`/`rose-700`) in prazna zgodovina potez (`slate-400`)
+- dostopnost plošče: roving tabindex — v zaporedju Tab je le eno polje šahovnice (prej vseh 64); med polji se premikamo s puščicami (gor/dol/levo/desno) po vzorcu ARIA grid, fokus se samodejno sinhronizira z aktivnim poljem
 
 ### Spremenjeno
 - CS-011 – template-literal `Square` (`File`+`Rank`) in obvezna osnovna polja `GameState` (`halfMoveClock`, `positionCounts`, `mode`, `aiSettings`, `aiThinking`)
@@ -29,6 +30,8 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 ### Popravljeno
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
 - popravki iz pregleda UI: (1) v dialogu za promocijo so bile možnosti neberljive (temno besedilo na belem ozadju ni bilo nastavljeno) — dodano temno besedilo na dialogu in gumbih; (2) indikator "AI is thinking" je ob preklicu (Undo/Reset/sprememba nastavitev) lahko obvisel — uveden ločen žeton razmišljanja v `useAIManager`; (3) v načinu PvAI je Undo po potezi AI sprožil takojšnjo ponovno potezo AI — `useUndoRedo` zdaj odstrani obe potezi, da uporabnik dobi svoj položaj nazaj
+- tipkovnica: `Escape` zdaj res odizbere izbrano figuro prek nove akcije `DESELECT_SQUARE` (prej je klic `onSquareClick` isto figuro znova izbral, zato je bil Escape brez učinka)
+- dostopnost: indeks poteze v grafični zgodovini (`.history-row__index`) ima `slate-400` namesto `slate-500`, s čimer ustreza pragu kontrasta WCAG AA (axe `color-contrast`, serious)
 
 ### Testi
 - #11: testi palet in padca na privzeto temo (`boardThemes.test.ts`, 6 testov)
@@ -53,6 +56,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-013: testi za AI nastavitve v `GameControls` — vse oznake težavnosti (depth 1–6, privzeti `?? 3`), oznake stila igre (balanced/aggressive/positional), veja `aiPlays === 'white'` ter posredovanje `onSetAiSettings` prek vseh treh izbirnih polj
 - CS-012/CS-013: robni primeri v `usePieceHandlers` — neveljavna izvorna/ciljna polja in `from === to` ne sprožijo poteze
 - regresijski testi za pregled UI: berljivost možnosti promocije (`PromotionDialog.ui.test.tsx`), pošiljanje `SET_AI_THINKING(false)` ob preklicu iskanja (`useAIManager.progress.test.ts`) in dvojni Undo v PvAI (`useUndoRedo.test.ts`)
+- sistematični QA prehod v pravem brskalniku (Playwright): prave geste (miš/touch), tipkovnica in bližnjice, posebna pravila šaha (rokada, mimohod, promocija, trojna ponovitev, šah-mat), polni axe pregled v vseh stanjih in meritve delovanja — na podlagi tega dodani regresijski testi v `KeyboardMoves.test.tsx` (Escape odizbere figuro, en sam tab stop na plošči, premik fokusa s puščicami)
 
 ### Dokumentacija
 - označi #11 (board theming) kot zaključen v `docs/MILESTONES.md` in osveži napredek milestona v1.0

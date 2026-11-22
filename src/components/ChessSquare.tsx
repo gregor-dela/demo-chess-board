@@ -11,6 +11,7 @@ interface ChessSquareProps {
   squareColor: 'light' | 'dark'
   onSquareClick: (square: Square) => void
   onPieceDrop: (from: Square, to: Square) => void
+  onDeselect: () => void
   onSquarePointerDown?: (square: Square, e: React.PointerEvent) => void
   currentSelected: Square | null
   isLastMove?: boolean
@@ -25,6 +26,7 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   squareColor,
   onSquareClick,
   onPieceDrop,
+  onDeselect,
   onSquarePointerDown,
   currentSelected,
   isLastMove,
@@ -103,10 +105,9 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
         onPieceDrop(currentSelected as Square, square)
       }
     }
-    // Optional: support Escape to clear selection
+    // Escape odizbere trenutno izbrano figuro
     if (e.key === 'Escape' && isSelected) {
-      // Reselecting same square will toggle state upstream if implemented; otherwise no-op
-      onSquareClick(square)
+      onDeselect()
     }
   }
 

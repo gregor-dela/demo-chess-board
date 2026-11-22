@@ -89,6 +89,15 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       }
     }
 
+    case 'DESELECT_SQUARE': {
+      if (!state.selectedSquare) return state
+      return {
+        ...state,
+        selectedSquare: null,
+        validMoves: []
+      }
+    }
+
     case 'MAKE_MOVE': {
       if (state.gameStatus !== 'active' && state.gameStatus !== 'check') {
         return state

@@ -138,7 +138,7 @@
   }
 
   .history-row__index {
-    @apply text-slate-500;
+    @apply text-slate-400;
   }
 
   .history-row__notation {

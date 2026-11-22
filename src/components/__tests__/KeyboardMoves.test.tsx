@@ -41,4 +41,19 @@ describe('Keyboard-only moves', () => {
     expect(await screen.findByLabelText(/d4\s+white pawn/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/d2\s+empty/i)).toBeInTheDocument()
   })
+
+  it('deselects the selected piece with Escape', async () => {
+    const user = userEvent.setup()
+
+    render(<ChessGame />)
+
+    const from = await screen.findByLabelText(/e2\s+white pawn/i)
+
+    from.focus()
+    await user.keyboard('{Enter}')
+    expect(from).toHaveAttribute('aria-pressed', 'true')
+
+    await user.keyboard('{Escape}')
+    expect(from).not.toHaveAttribute('aria-pressed')
+  })
 })

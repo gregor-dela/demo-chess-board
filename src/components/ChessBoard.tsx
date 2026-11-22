@@ -9,7 +9,8 @@ import { getBoardThemePalette } from '../utils/boardThemes'
 const ChessBoard: React.FC<ChessBoardProps> = ({
   gameState,
   onSquareClick,
-  onPieceDrop
+  onPieceDrop,
+  onDeselect
 }) => {
   const isWhiteBottom = gameState.orientation === 'whiteBottom'
   const files = isWhiteBottom ? ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] : ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
@@ -78,6 +79,7 @@ const ChessBoard: React.FC<ChessBoardProps> = ({
                       squareColor={squareColor}
                       onSquareClick={onSquareClick}
                       onPieceDrop={onPieceDrop}
+                      onDeselect={onDeselect}
                       onSquarePointerDown={handleSquarePointerDown}
                       currentSelected={gameState.selectedSquare}
                       isLastMove={isLastMove}

@@ -15,6 +15,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
     gameState,
     handleSquareClick,
     handlePieceDrop,
+    handleDeselect,
     resetGame,
     undoMove,
     redoMove,
@@ -34,6 +35,7 @@ const ChessGame: React.FC<ChessGameProps> = ({ initialState }) => {
           gameState={gameState}
           onSquareClick={handleSquareClick}
           onPieceDrop={handlePieceDrop}
+          onDeselect={handleDeselect}
         />
       </div>
       <div className="game-layout__panel">

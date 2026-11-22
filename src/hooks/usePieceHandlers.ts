@@ -24,5 +24,9 @@ export const usePieceHandlers = (dispatch: Dispatch<GameAction>) => {
     dispatch({ type: 'MAKE_MOVE', from, to })
   }, [dispatch])
 
-  return { handleSquareClick, handlePieceDrop }
+  const handleDeselect = useCallback(() => {
+    dispatch({ type: 'DESELECT_SQUARE' })
+  }, [dispatch])
+
+  return { handleSquareClick, handlePieceDrop, handleDeselect }
 }

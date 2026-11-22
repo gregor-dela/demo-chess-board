@@ -117,6 +117,7 @@ export interface ChessBoardProps {
   gameState: GameState;
   onSquareClick: (square: Square) => void;
   onPieceDrop: (from: Square, to: Square) => void;
+  onDeselect: () => void;
 }
 
 export interface ChessPieceProps {
@@ -158,6 +159,7 @@ export interface SquareInfo {
 // State management actions
 export type GameAction = 
   | { type: 'SELECT_SQUARE'; square: Square }
+  | { type: 'DESELECT_SQUARE' }
   | { type: 'MAKE_MOVE'; from: Square; to: Square }
   | { type: 'REQUEST_PROMOTION'; from: Square; to: Square; color: PieceColor }
   | { type: 'COMPLETE_PROMOTION'; piece: Exclude<PieceType, 'king' | 'pawn'> }

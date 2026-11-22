@@ -17,7 +17,7 @@ export { initialGameState }
 export const useChessGame = (initialState: GameState = initialGameState) => {
   const { gameState, dispatch } = useGameState(initialState)
   const { requestAiMove, bumpAiVersion } = useAIManager(gameState, dispatch)
-  const { handleSquareClick, handlePieceDrop } = usePieceHandlers(dispatch)
+  const { handleSquareClick, handlePieceDrop, handleDeselect } = usePieceHandlers(dispatch)
   const { undoMove, redoMove, canUndo, canRedo } = useUndoRedo(gameState, dispatch, bumpAiVersion)
 
   const resetGame = useCallback(() => {
@@ -64,6 +64,7 @@ export const useChessGame = (initialState: GameState = initialGameState) => {
     gameState,
     handleSquareClick,
     handlePieceDrop,
+    handleDeselect,
     resetGame,
     undoMove,
     redoMove,

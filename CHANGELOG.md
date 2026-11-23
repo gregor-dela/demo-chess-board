@@ -36,6 +36,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - popravki iz pregleda UI: (1) v dialogu za promocijo so bile možnosti neberljive (temno besedilo na belem ozadju ni bilo nastavljeno) — dodano temno besedilo na dialogu in gumbih; (2) indikator "AI is thinking" je ob preklicu (Undo/Reset/sprememba nastavitev) lahko obvisel — uveden ločen žeton razmišljanja v `useAIManager`; (3) v načinu PvAI je Undo po potezi AI sprožil takojšnjo ponovno potezo AI — `useUndoRedo` zdaj odstrani obe potezi, da uporabnik dobi svoj položaj nazaj
 - tipkovnica: `Escape` zdaj res odizbere izbrano figuro prek nove akcije `DESELECT_SQUARE` (prej je klic `onSquareClick` isto figuro znova izbral, zato je bil Escape brez učinka)
 - dostopnost: indeks poteze v grafični zgodovini (`.history-row__index`) ima `slate-400` namesto `slate-500`, s čimer ustreza pragu kontrasta WCAG AA (axe `color-contrast`, serious)
+- dopolni sekcijo Neizdano namesto prepisa
 
 ### Testi
 - #11: testi palet in padca na privzeto temo (`boardThemes.test.ts`, 6 testov)

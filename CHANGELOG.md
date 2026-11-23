@@ -26,6 +26,10 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - CS-005/CS-009 – izluščena `board.ts` (brez odvisnosti) in `notation.ts`; pretvorbe koordinat centralizirane, krožna odvisnost prekinjena
 - CS-006 – izdvoji apply/undo/redo helperje iz reducerja (`src/hooks/moveStateHelpers.ts`); reducer switch skrajšan s ~400 na 138 vrstic
 - #10 (SRP) – razdelitev `useChessGame.ts` (611 vrstic) na 4 specializirane hooke (`useGameState`, `usePieceHandlers`, `useUndoRedo`, `useAIManager`) in pure reducer modul `gameReducer.ts`; `useChessGame` je zdaj kompozicija (71 vrstic), javni API nespremenjen
+- predpomnjene tabele square<->koordinate
+- hitrejši isKingInCheck in plitvi klon v isMoveLegal
+- izračunaj skupne evaluacijske člene enkrat v evaluate
+- memoiziraj ploščo in izloči predogled poteze iz gameState
 
 ### Popravljeno
 - CS-010 – `quiescence()` zdaj upošteva 50-potezno pravilo (ob `halfMoveClock >= 100` vrne remi, score 0) in pravilno propagira števec navzdol (zajem ali poteza kmeta ga resetira na 0)
@@ -77,7 +81,7 @@ Vse pomembne spremembe tega projekta so dokumentirane v tej datoteki.
 - podaljšaj timeout promotion integracijskega testa pod pokritostjo
 - posodobi CHANGELOG za izboljšano matiranje v končnicah
 - sinhroniziraj marker `.changelog-last-sha` (#5, #10)
-
+- dodaj playwright in uredi devDependencies
 
 ## 2025-09-02 - Popravek napake pri zaznavi mat-a
 
